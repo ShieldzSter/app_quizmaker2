@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quizmaker 2.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#0f172a;color:#f1f5f9;overflow:hidden;height:100vh;}
+input,textarea,select,button{font-family:inherit;outline:none;}
+.screen{display:none;width:100%;height:100vh;}
+.screen.active{display:flex;}
+::-webkit-scrollbar{width:7px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#334155;border-radius:10px;}
+::-webkit-scrollbar-thumb:hover{background:#475569;}
+.btn-primary{background:#2563eb;color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.15s;}
+.btn-primary:hover{background:#1d4ed8;}
+.btn-outline{background:transparent;color:#2563eb;border:2px solid #2563eb;padding:10px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.btn-outline:hover{background:#2563eb;color:#fff;}
+.btn-ghost{background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:13px;font-weight:600;padding:6px 10px;border-radius:6px;transition:background 0.1s;}
+.btn-ghost:hover{background:#1e293b;color:#e2e8f0;}
+.toggle{width:36px;height:20px;border-radius:10px;background:#334155;cursor:pointer;position:relative;transition:background 0.2s;display:inline-block;vertical-align:middle;flex-shrink:0;}
+.toggle.on{background:#2563eb;}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left 0.2s;}
+.toggle.on::after{left:18px;}
+.slide-item{display:flex;align-items:center;gap:6px;padding:9px 10px;border-left:3px solid transparent;cursor:pointer;border-bottom:1px solid #334155;transition:background 0.1s;position:relative;}
+.slide-item.active{border-left-color:#6366f1;background:#1e3a5f;}
+.slide-item:hover{background:#273448;}
+.slide-actions{display:none;gap:2px;position:absolute;right:4px;top:50%;transform:translateY(-50%);}
+.slide-item:hover .slide-actions{display:flex;}
+.type-badge{display:inline-block;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+.rp-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;margin-top:14px;}
+.rp-input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;font-size:13px;background:#fff;color:#0f172a;}
+.rp-input:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,0.15);}
+.rp-textarea{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #e2e8f0;font-size:13px;background:#fff;color:#0f172a;resize:vertical;min-height:60px;}
+.rp-textarea:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,0.15);}
+.tab-btn-rp{padding:7px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:#f1f5f9;color:#64748b;border-radius:6px;transition:all 0.15s;}
+.tab-btn-rp.active{background:#2563eb;color:#fff;}
+.swatch{width:36px;height:36px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all 0.15s;}
+.swatch.active{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,0.3);}
+.swatch:hover{transform:scale(1.1);}
+.action-btn-sm{background:none;border:none;color:#64748b;cursor:pointer;padding:2px 3px;border-radius:4px;font-size:12px;line-height:1;}
+.action-btn-sm:hover{background:#334155;color:#e2e8f0;}
+.action-btn-sm:disabled,.action-btn-sm[disabled]{opacity:0.3;pointer-events:none;}
+.option-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.option-row input[type="text"]{flex:1;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;}
+.option-row input[type="text"]:focus{border-color:#2563eb;}
+.option-row input[type="radio"],.option-row input[type="checkbox"]{cursor:pointer;width:16px;height:16px;accent-color:#2563eb;}
+.wiz-step{display:none;flex-direction:column;align-items:center;gap:16px;width:100%;}
+.wiz-step.active{display:flex;}
+.grad-swatch{width:44px;height:44px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all 0.15s;}
+.grad-swatch.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.5);}
+.grad-swatch:hover{transform:scale(1.08);}
+.stepper{display:flex;align-items:center;gap:8px;background:#f8fafc;padding:8px 12px;border-radius:10px;margin-bottom:6px;}
+.stepper-label{flex:1;font-size:13px;font-weight:600;color:#334155;}
+.stepper button{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.stepper-val{width:28px;text-align:center;font-size:14px;font-weight:700;color:#0f172a;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn 0.3s ease;}
+.quiz-card-home{background:#1e293b;border-radius:14px;padding:16px;cursor:pointer;transition:all 0.15s;border:1px solid #334155;position:relative;}
+.quiz-card-home:hover{background:#273448;border-color:#475569;transform:translateY(-2px);}
+.new-badge{position:absolute;top:8px;right:8px;background:#22c55e;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;}
+</style>
+</head>
+<body data-id="0">
+<app-icon data-id="1" hidden data-icon="circle-help" data-palette="Blue"></app-icon>
+
+<!-- HOME SCREEN -->
+<div data-id="2" id="screen-home" class="screen active" style="flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:40px 20px;">
+  <div data-id="3" id="home-content" class="fade-in" style="width:100%;max-width:480px;margin:0 auto;"></div>
+  <div data-id="4" id="home-grid" style="width:100%;max-width:720px;margin:32px auto 0;"></div>
+  <footer data-id="5" style="margin-top:auto;padding:24px 0 12px;text-align:center;"><p data-id="6" style="font-size:11px;color:#475569;">Made by Copilot</p></footer>
+</div>
+
+<!-- WIZARD SCREEN -->
+<div data-id="7" id="screen-wizard" class="screen" style="flex-direction:column;align-items:center;justify-content:center;overflow-y:auto;padding:40px 20px;">
+  <div data-id="8" id="wizard-card" class="fade-in" style="background:#fff;border-radius:20px;padding:32px;max-width:520px;width:100%;color:#0f172a;box-shadow:0 25px 60px rgba(0,0,0,0.3);"></div>
+</div>
+
+<!-- EDITOR SCREEN -->
+<div data-id="9" id="screen-editor" class="screen" style="flex-direction:row;height:100vh;">
+  <div data-id="10" id="editor-sidebar" style="width:220px;min-width:220px;background:#1e293b;display:flex;flex-direction:column;height:100vh;border-right:1px solid #334155;"></div>
+  <div data-id="11" id="editor-canvas" style="flex:1;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;"></div>
+  <div data-id="12" id="editor-rpanel" style="width:280px;min-width:280px;background:#fff;color:#0f172a;overflow-y:auto;height:100vh;border-left:1px solid #e2e8f0;"></div>
+</div>
+
+<!-- PREVIEW SCREEN -->
+<div data-id="13" id="screen-preview" class="screen" style="flex-direction:column;height:100vh;"></div>
+
+<script>
+// =================== CONSTANTS ===================
+var THEMES=[
+{id:'ocean',name:'Ocean Blue',bg:'#f0f7ff',card:'#ffffff',primary:'#2563eb',text:'#1e293b',muted:'#64748b',border:'#bfdbfe'},
+{id:'forest',name:'Forest Green',bg:'#f0fdf4',card:'#ffffff',primary:'#16a34a',text:'#14532d',muted:'#4b7c59',border:'#bbf7d0'},
+{id:'sunset',name:'Sunset',bg:'#fff7ed',card:'#ffffff',primary:'#ea580c',text:'#431407',muted:'#9a3412',border:'#fed7aa'},
+{id:'purple',name:'Purple',bg:'#f5f3ff',card:'#ffffff',primary:'#7c3aed',text:'#2e1065',muted:'#6d28d9',border:'#ddd6fe'},
+{id:'rose',name:'Rose',bg:'#fff1f2',card:'#ffffff',primary:'#e11d48',text:'#4c0519',muted:'#9f1239',border:'#fecdd3'},
+{id:'teal',name:'Teal',bg:'#f0fdf9',card:'#ffffff',primary:'#0d9488',text:'#042f2e',muted:'#0f766e',border:'#99f6e4'},
+{id:'slate',name:'Slate',bg:'#f8fafc',card:'#ffffff',primary:'#475569',text:'#0f172a',muted:'#64748b',border:'#e2e8f0'},
+{id:'amber',name:'Amber',bg:'#fffbeb',card:'#ffffff',primary:'#d97706',text:'#451a03',muted:'#92400e',border:'#fde68a'},
+{id:'midnight',name:'Midnight',bg:'#0a0f1e',card:'#1a2035',primary:'#60a5fa',text:'#e2e8f0',muted:'#94a3b8',border:'#1e3a5f'},
+{id:'dark',name:'Dark Slate',bg:'#0f172a',card:'#1e293b',primary:'#38bdf8',text:'#f1f5f9',muted:'#94a3b8',border:'#334155'},
+{id:'galaxy',name:'Galaxy',bg:'#12001e',card:'#1e0a35',primary:'#a78bfa',text:'#ede9fe',muted:'#7c3aed',border:'#4c1d95'},
+{id:'obsidian',name:'Obsidian',bg:'#060606',card:'#111111',primary:'#f59e0b',text:'#ffffff',muted:'#9ca3af',border:'#1f2937'}
+];
+var FONTS=['Arial','Georgia','Verdana','Courier New','Helvetica','Tahoma','Times New Roman','Trebuchet MS','Palatino','Impact','Comic Sans MS'];
+var BG_GRADIENTS=[
+'linear-gradient(135deg,#667eea,#764ba2)','linear-gradient(135deg,#f093fb,#f5576c)','linear-gradient(135deg,#4facfe,#00f2fe)',
+'linear-gradient(135deg,#43e97b,#38f9d7)','linear-gradient(135deg,#fa709a,#fee140)','linear-gradient(135deg,#a18cd1,#fbc2eb)',
+'linear-gradient(135deg,#fd7043,#ffb74d)','linear-gradient(135deg,#00c6ff,#0072ff)','linear-gradient(135deg,#11998e,#38ef7d)',
+'linear-gradient(135deg,#ee0979,#ff6a00)','linear-gradient(135deg,#373b44,#4286f4)','linear-gradient(135deg,#f7971e,#ffd200)'
+];
+var TYPE_COLORS={mc:'#3b82f6',tf:'#10b981',ms:'#8b5cf6',fitb:'#f59e0b',mat:'#ef4444',ord:'#06b6d4'};
+var TYPE_NAMES={mc:'Multiple Choice',tf:'True / False',ms:'Multi-Select',fitb:'Fill in Blank',mat:'Matching',ord:'Ordering'};
+var TYPE_SHORT={mc:'MC',tf:'TF',ms:'MS',fitb:'FB',mat:'MT',ord:'OR'};
+var ENTITY_ID='qm2-quizzes';
+
+// =================== STATE ===================
+var quizzes=[];
+var currentQuiz=null;
+var currentSlideIdx=0;
+var rpTab='content';
+var wizStep=0;
+var wizData={title:'',description:'',theme:THEMES[0],font:'Arial',counts:{mc:3,tf:0,ms:0,fitb:0,mat:0,ord:0}};
+
+function uid(){return 'q'+Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+
+// =================== PERSISTENCE ===================
+function saveAll(){
+  try{localStorage.setItem(ENTITY_ID,JSON.stringify(quizzes));}
+  catch(e){console.error('Save error:',e);}
+}
+
+function saveQuiz(q){
+  try{
+    var found=false;
+    for(var i=0;i<quizzes.length;i++){if(quizzes[i].id===q.id){quizzes[i]=q;found=true;break;}}
+    if(!found)quizzes.push(q);
+    localStorage.setItem(ENTITY_ID,JSON.stringify(quizzes));
+  }catch(e){console.error('Save error:',e);}
+}
+
+function deleteQuizFromStorage(qId){
+  try{
+    quizzes=quizzes.filter(function(q){return q.id!==qId;});
+    localStorage.setItem(ENTITY_ID,JSON.stringify(quizzes));
+  }catch(e){console.error('Delete error:',e);}
+}
+
+function loadAllQuizzes(){
+  try{
+    var stored=localStorage.getItem(ENTITY_ID);
+    if(!stored)return;
+    var loaded=JSON.parse(stored);
+    if(!Array.isArray(loaded)||loaded.length===0)return;
+    quizzes=loaded;
+    for(var i=0;i<quizzes.length;i++){
+      if(!quizzes[i].theme||!quizzes[i].theme.id)quizzes[i].theme=THEMES[0];
+      if(!quizzes[i].fontFamily)quizzes[i].fontFamily='Arial';
+      if(!quizzes[i].bgType)quizzes[i].bgType='solid';
+      if(quizzes[i].bgGradientIdx===undefined)quizzes[i].bgGradientIdx=0;
+      if(!quizzes[i].btnStyle)quizzes[i].btnStyle='rounded';
+      if(!quizzes[i].slides)quizzes[i].slides=[];
+      if(quizzes[i].passScore===undefined)quizzes[i].passScore=70;
+      if(quizzes[i].shuffle===undefined)quizzes[i].shuffle=false;
+      if(quizzes[i].showFeedback===undefined)quizzes[i].showFeedback=true;
+      if(!quizzes[i].passingMessage)quizzes[i].passingMessage='Congratulations! You passed!';
+      if(!quizzes[i].failingMessage)quizzes[i].failingMessage='Keep practicing!';
+    }
+  }catch(e){console.error('Load error:',e);}
+}
+
+// =================== SCREEN MANAGEMENT ===================
+function showScreen(name){
+  var screens=document.querySelectorAll('.screen');
+  for(var i=0;i<screens.length;i++) screens[i].classList.remove('active');
+  document.getElementById('screen-'+name).classList.add('active');
+  if(name==='home') renderHome();
+  else if(name==='wizard') renderWizard();
+  else if(name==='editor') renderEditor();
+  else if(name==='preview') renderPreview();
+}
+
+// =================== HOME SCREEN ===================
+function renderHome(){
+  var hc=document.getElementById('home-content');
+  hc.innerHTML='<div style="background:#fff;border-radius:20px;padding:36px 32px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.3);color:#0f172a;">'
+    +'<div style="font-size:42px;margin-bottom:8px;">🎯</div>'
+    +'<h1 style="font-size:26px;font-weight:800;margin-bottom:4px;color:#0f172a;">Quizmaker 2.0</h1>'
+    +'<p style="color:#64748b;font-size:14px;margin-bottom:24px;">Create beautiful, interactive quizzes in minutes</p>'
+    +'<button id="home-create" class="btn-primary" style="width:100%;margin-bottom:10px;padding:14px;">✏️ Create New Quiz</button>'
+    +'<button id="home-import" class="btn-outline" style="width:100%;padding:12px;">📂 Open .qz2 File</button>'
+    +'</div>';
+  document.getElementById('home-create').addEventListener('click',function(){
+    wizStep=0;wizData={title:'',description:'',theme:THEMES[0],font:'Arial',counts:{mc:3,tf:0,ms:0,fitb:0,mat:0,ord:0}};
+    showScreen('wizard');
+  });
+  document.getElementById('home-import').addEventListener('click',importQZ2);
+
+  var hg=document.getElementById('home-grid');
+  if(quizzes.length===0){
+    hg.innerHTML='<p style="text-align:center;color:#475569;font-size:13px;margin-top:12px;">No saved quizzes yet.</p>';
+    return;
+  }
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">';
+  var td=today();
+  for(var i=0;i<quizzes.length;i++){
+    var q=quizzes[i];
+    var isNew=q.created===td;
+    h+='<div class="quiz-card-home" data-qidx="'+i+'">'
+      +(isNew?'<span class="new-badge">New</span>':'')
+      +'<div style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(q.title||'Untitled')+'</div>'
+      +'<div style="font-size:12px;color:#94a3b8;margin-bottom:12px;">'+q.slides.length+' slide'+(q.slides.length!==1?'s':'')+'</div>'
+      +'<div style="display:flex;gap:6px;">'
+      +'<button class="btn-primary home-edit-btn" data-qidx="'+i+'" style="padding:6px 14px;font-size:12px;flex:1;">Edit</button>'
+      +'<button class="btn-ghost home-del-btn" data-qidx="'+i+'" style="padding:6px 8px;font-size:12px;color:#ef4444;" title="Delete quiz">🗑</button>'
+      +'</div>'
+      +'</div>';
+  }
+  h+='</div>';
+  hg.innerHTML=h;
+  hg.querySelectorAll('.home-edit-btn').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var idx=parseInt(this.getAttribute('data-qidx'));
+      currentQuiz=quizzes[idx];currentSlideIdx=0;rpTab='content';
+      showScreen('editor');
+    });
+  });
+  hg.querySelectorAll('.home-del-btn').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var idx=parseInt(this.getAttribute('data-qidx'));
+      if(confirm('Delete "'+quizzes[idx].title+'"? This cannot be undone.')){
+        var removed=quizzes.splice(idx,1)[0];
+        deleteQuizFromStorage(removed.id);
+        renderHome();
+      }
+    });
+  });
+}
+
+// =================== WIZARD ===================
+function renderWizard(){
+  var c=document.getElementById('wizard-card');
+  var dots='<div style="display:flex;justify-content:center;gap:8px;margin-bottom:20px;">';
+  for(var i=0;i<3;i++) dots+='<div style="width:10px;height:10px;border-radius:50%;background:'+(i===wizStep?'#2563eb':'#e2e8f0')+';transition:background 0.2s;"></div>';
+  dots+='</div>';
+
+  var body='';
+  if(wizStep===0){
+    body='<h2 style="font-size:20px;font-weight:800;margin-bottom:4px;">Create a New Quiz</h2>'
+      +'<p style="color:#64748b;font-size:13px;margin-bottom:20px;">Step 1: Name your quiz</p>'
+      +'<label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">QUIZ TITLE</label>'
+      +'<input id="wiz-title" class="rp-input" placeholder="e.g., Biology Chapter 5" value="'+esc(wizData.title)+'" style="margin-bottom:14px;">'
+      +'<label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">DESCRIPTION (optional)</label>'
+      +'<textarea id="wiz-desc" class="rp-textarea" placeholder="Brief description..." rows="3">'+esc(wizData.description)+'</textarea>'
+      +'<div style="display:flex;gap:10px;margin-top:20px;">'
+      +'<button id="wiz-back0" class="btn-ghost" style="color:#64748b;">← Back</button>'
+      +'<button id="wiz-next0" class="btn-primary" style="flex:1;">Next →</button>'
+      +'</div>';
+  } else if(wizStep===1){
+    body='<h2 style="font-size:20px;font-weight:800;margin-bottom:4px;">Choose a Theme</h2>'
+      +'<p style="color:#64748b;font-size:13px;margin-bottom:16px;">Step 2: Pick your quiz\'s look</p>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">';
+    for(var i=0;i<THEMES.length;i++){
+      var t=THEMES[i];
+      body+='<div class="swatch wiz-theme-sw'+(wizData.theme.id===t.id?' active':'')+'" data-tidx="'+i+'" style="background:'+t.primary+';width:100%;height:40px;" title="'+t.name+'"></div>';
+    }
+    body+='</div>'
+      +'<label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">FONT FAMILY</label>'
+      +'<select id="wiz-font" class="rp-input" style="margin-bottom:6px;">';
+    for(var i=0;i<FONTS.length;i++) body+='<option'+(wizData.font===FONTS[i]?' selected':'')+'>'+FONTS[i]+'</option>';
+    body+='</select>'
+      +'<div style="display:flex;gap:10px;margin-top:20px;">'
+      +'<button id="wiz-back1" class="btn-ghost" style="color:#64748b;">← Back</button>'
+      +'<button id="wiz-next1" class="btn-primary" style="flex:1;">Next →</button>'
+      +'</div>';
+  } else {
+    body='<h2 style="font-size:20px;font-weight:800;margin-bottom:4px;">Add Questions</h2>'
+      +'<p style="color:#64748b;font-size:13px;margin-bottom:16px;">Step 3: Choose how many of each type</p>';
+    var types=['mc','tf','ms','fitb','mat','ord'];
+    for(var i=0;i<types.length;i++){
+      var t=types[i];
+      body+='<div class="stepper">'
+        +'<span class="type-badge" style="background:'+TYPE_COLORS[t]+';">'+TYPE_SHORT[t]+'</span>'
+        +'<span class="stepper-label">'+TYPE_NAMES[t]+'</span>'
+        +'<button class="wiz-dec" data-st="'+t+'" style="background:#e2e8f0;color:#0f172a;">−</button>'
+        +'<span class="stepper-val" id="wiz-cnt-'+t+'">'+wizData.counts[t]+'</span>'
+        +'<button class="wiz-inc" data-st="'+t+'" style="background:#2563eb;color:#fff;">+</button>'
+        +'</div>';
+    }
+    body+='<div style="display:flex;gap:10px;margin-top:20px;">'
+      +'<button id="wiz-back2" class="btn-ghost" style="color:#64748b;">← Back</button>'
+      +'<button id="wiz-create" class="btn-primary" style="flex:1;">🚀 Create Quiz</button>'
+      +'</div>';
+  }
+
+  c.innerHTML=dots+body;
+
+  // Events
+  if(wizStep===0){
+    document.getElementById('wiz-back0').addEventListener('click',function(){showScreen('home');});
+    document.getElementById('wiz-next0').addEventListener('click',function(){
+      wizData.title=document.getElementById('wiz-title').value.trim()||'Untitled Quiz';
+      wizData.description=document.getElementById('wiz-desc').value.trim();
+      wizStep=1;renderWizard();
+    });
+  } else if(wizStep===1){
+    c.querySelectorAll('.wiz-theme-sw').forEach(function(sw){
+      sw.addEventListener('click',function(){
+        wizData.theme=THEMES[parseInt(this.getAttribute('data-tidx'))];
+        renderWizard();
+      });
+    });
+    document.getElementById('wiz-back1').addEventListener('click',function(){wizStep=0;renderWizard();});
+    document.getElementById('wiz-next1').addEventListener('click',function(){
+      wizData.font=document.getElementById('wiz-font').value;
+      wizStep=2;renderWizard();
+    });
+  } else {
+    c.querySelectorAll('.wiz-dec').forEach(function(b){
+      b.addEventListener('click',function(){
+        var t=this.getAttribute('data-st');
+        if(wizData.counts[t]>0)wizData.counts[t]--;
+        document.getElementById('wiz-cnt-'+t).textContent=wizData.counts[t];
+      });
+    });
+    c.querySelectorAll('.wiz-inc').forEach(function(b){
+      b.addEventListener('click',function(){
+        var t=this.getAttribute('data-st');
+        if(wizData.counts[t]<50)wizData.counts[t]++;
+        document.getElementById('wiz-cnt-'+t).textContent=wizData.counts[t];
+      });
+    });
+    document.getElementById('wiz-back2').addEventListener('click',function(){wizStep=1;renderWizard();});
+    document.getElementById('wiz-create').addEventListener('click',function(){
+      var totalCount=0;
+      var keys=Object.keys(wizData.counts);
+      for(var i=0;i<keys.length;i++) totalCount+=wizData.counts[keys[i]];
+      if(totalCount===0){alert('Please add at least one question.');return;}
+      var q=mkQuiz(wizData);
+      quizzes.push(q);saveQuiz(q);
+      currentQuiz=q;currentSlideIdx=0;rpTab='content';
+      showScreen('editor');
+    });
+  }
+}
+
+function mkQuiz(wd){
+  var q={id:uid(),title:wd.title,description:wd.description,passScore:70,shuffle:false,showFeedback:true,
+    fontFamily:wd.font,bgType:'solid',bgGradientIdx:0,btnStyle:'rounded',
+    passingMessage:'Congratulations! You passed!',failingMessage:'Keep practicing!',
+    theme:JSON.parse(JSON.stringify(wd.theme)),slides:[],created:today()};
+  var types=['mc','tf','ms','fitb','mat','ord'];
+  for(var ti=0;ti<types.length;ti++){
+    var t=types[ti];
+    for(var i=0;i<wd.counts[t];i++) q.slides.push(mkSlide(t));
+  }
+  return q;
+}
+
+function mkSlide(qType){
+  var s={id:uid(),qType:qType,question:'',points:10,feedback:{enabled:false,correct:'',incorrect:''}};
+  if(qType==='mc'){s.options=['Option A','Option B','Option C','Option D'];s.correct=0;}
+  else if(qType==='tf'){s.correct=0;}
+  else if(qType==='ms'){s.options=['Option A','Option B','Option C','Option D'];s.correct=[0];}
+  else if(qType==='fitb'){s.correctAnswer='';}
+  else if(qType==='mat'){s.pairs=[{left:'Term 1',right:'Definition 1'},{left:'Term 2',right:'Definition 2'}];}
+  else if(qType==='ord'){s.items=['First','Second','Third','Fourth'];}
+  return s;
+}
+
+function currentSlide(){return currentQuiz&&currentQuiz.slides[currentSlideIdx]?currentQuiz.slides[currentSlideIdx]:null;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// Safely encode quiz JSON for embedding inside a <script> tag
+function safeJsonForScript(obj){
+  return JSON.stringify(obj).replace(/<\//g,'<\\/').replace(/<!--/g,'<\\!--');
+}
+
+// =================== EDITOR ===================
+function renderEditor(){renderSidebar();renderCanvas();renderRPanel();}
+
+function renderSidebar(){
+  var sb=document.getElementById('editor-sidebar');
+  var q=currentQuiz;
+  var h='<div style="padding:14px 12px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:8px;">'
+    +'<span style="background:#6366f1;color:#fff;font-size:11px;font-weight:800;padding:3px 7px;border-radius:6px;">Q2</span>'
+    +'<span style="font-size:13px;font-weight:700;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">'+esc(q.title)+'</span>'
+    +'</div>'
+    +'<div style="padding:8px 10px;border-bottom:1px solid #334155;">'
+    +'<button id="sb-add-slide" class="btn-primary" style="width:100%;padding:8px;font-size:12px;">+ Add Slide</button>'
+    +'</div>'
+    +'<div id="sb-slides" style="flex:1;overflow-y:auto;">';
+  for(var i=0;i<q.slides.length;i++){
+    var s=q.slides[i];
+    h+='<div class="slide-item'+(i===currentSlideIdx?' active':'')+'" data-sidx="'+i+'">'
+      +'<span style="font-size:11px;color:#94a3b8;min-width:16px;">'+String(i+1)+'</span>'
+      +'<span class="type-badge" style="background:'+TYPE_COLORS[s.qType]+';">'+TYPE_SHORT[s.qType]+'</span>'
+      +'<span style="font-size:12px;color:#cbd5e1;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(s.question||'Untitled')+'</span>'
+      +'<div class="slide-actions">'
+      +'<button class="action-btn-sm sb-move-up" data-sidx="'+i+'"'+(i===0?' disabled':'')+' title="Move up">▲</button>'
+      +'<button class="action-btn-sm sb-move-dn" data-sidx="'+i+'"'+(i===q.slides.length-1?' disabled':'')+' title="Move down">▼</button>'
+      +'<button class="action-btn-sm sb-del" data-sidx="'+i+'" title="Delete" style="color:#ef4444;">🗑</button>'
+      +'</div></div>';
+  }
+  h+='</div>'
+    +'<div style="padding:10px 12px;border-top:1px solid #334155;">'
+    +'<button id="sb-home" class="btn-ghost" style="width:100%;text-align:left;">← Home</button>'
+    +'</div>';
+  sb.innerHTML=h;
+
+  document.getElementById('sb-add-slide').addEventListener('click',showTypePicker);
+  document.getElementById('sb-home').addEventListener('click',function(){showScreen('home');});
+  sb.querySelectorAll('.slide-item').forEach(function(el){
+    el.addEventListener('click',function(e){
+      if(e.target.closest('.slide-actions'))return;
+      currentSlideIdx=parseInt(this.getAttribute('data-sidx'));
+      rpTab='content';renderEditor();
+    });
+  });
+  sb.querySelectorAll('.sb-move-up').forEach(function(b){
+    b.addEventListener('click',function(e){e.stopPropagation();moveSlide(parseInt(this.getAttribute('data-sidx')),-1);});
+  });
+  sb.querySelectorAll('.sb-move-dn').forEach(function(b){
+    b.addEventListener('click',function(e){e.stopPropagation();moveSlide(parseInt(this.getAttribute('data-sidx')),1);});
+  });
+  sb.querySelectorAll('.sb-del').forEach(function(b){
+    b.addEventListener('click',function(e){e.stopPropagation();deleteSlide(parseInt(this.getAttribute('data-sidx')));});
+  });
+}
+
+function moveSlide(idx,dir){
+  var ni=idx+dir;
+  if(ni<0||ni>=currentQuiz.slides.length)return;
+  var tmp=currentQuiz.slides[idx];
+  currentQuiz.slides[idx]=currentQuiz.slides[ni];
+  currentQuiz.slides[ni]=tmp;
+  currentSlideIdx=ni;saveQuiz(currentQuiz);renderSidebar();renderCanvas();
+}
+
+function deleteSlide(idx){
+  if(currentQuiz.slides.length<=1){alert('Quiz must have at least one slide.');return;}
+  currentQuiz.slides.splice(idx,1);
+  if(currentSlideIdx>=currentQuiz.slides.length)currentSlideIdx=currentQuiz.slides.length-1;
+  saveQuiz(currentQuiz);renderEditor();
+}
+
+function addSlide(qType){
+  var s=mkSlide(qType);
+  currentQuiz.slides.push(s);
+  currentSlideIdx=currentQuiz.slides.length-1;
+  saveQuiz(currentQuiz);rpTab='content';renderEditor();
+}
+
+// =================== TYPE PICKER MODAL ===================
+function showTypePicker(){
+  var modal=document.createElement('div');
+  modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML='<div style="background:#fff;border-radius:20px;padding:32px;max-width:480px;width:90%;box-shadow:0 25px 60px rgba(0,0,0,0.4);">'
+    +'<h2 style="font-size:18px;font-weight:800;color:#0f172a;margin:0 0 6px;">Choose Question Type</h2>'
+    +'<p style="color:#64748b;font-size:13px;margin:0 0 20px;">Select the type of question to add</p>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    +Object.keys(TYPE_NAMES).map(function(t){
+      return '<button data-qtype="'+t+'" style="padding:16px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;text-align:left;transition:all 0.15s;">'
+        +'<span style="display:inline-block;background:'+TYPE_COLORS[t]+';color:#fff;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;margin-bottom:8px;">'+TYPE_SHORT[t]+'</span>'
+        +'<div style="font-weight:700;font-size:14px;color:#0f172a;">'+TYPE_NAMES[t]+'</div></button>';
+    }).join('')
+    +'</div>'
+    +'<button id="modal-cancel" style="margin-top:16px;width:100%;padding:10px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;color:#64748b;font-size:13px;font-weight:600;">Cancel</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+  modal.querySelector('#modal-cancel').addEventListener('click',function(){document.body.removeChild(modal);});
+  modal.querySelectorAll('[data-qtype]').forEach(function(btn){
+    btn.addEventListener('mouseenter',function(){this.style.borderColor=TYPE_COLORS[this.getAttribute('data-qtype')];this.style.background='#f8fafc';});
+    btn.addEventListener('mouseleave',function(){this.style.borderColor='#e2e8f0';this.style.background='#fff';});
+    btn.addEventListener('click',function(){addSlide(this.getAttribute('data-qtype'));document.body.removeChild(modal);});
+  });
+  modal.addEventListener('click',function(e){if(e.target===modal)document.body.removeChild(modal);});
+}
+
+// =================== CANVAS ===================
+function renderCanvas(){
+  var cv=document.getElementById('editor-canvas');
+  var q=currentQuiz,s=currentSlide();
+  var bgStyle='background:'+q.theme.bg+';';
+  if(q.bgType==='gradient') bgStyle='background:'+BG_GRADIENTS[q.bgGradientIdx||0]+';';
+  cv.style.cssText='flex:1;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;'+bgStyle;
+
+  if(!s){cv.innerHTML='<div style="text-align:center;color:'+q.theme.muted+';padding:60px;">No slides yet. Add one!</div>';return;}
+
+  var borderR=q.btnStyle==='pill'?'999px':q.btnStyle==='sharp'?'2px':'8px';
+  var fontFamily=q.fontFamily||'Arial';
+  var h='<div style="background:'+q.theme.card+';border-radius:16px;max-width:560px;width:100%;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.08);font-family:'+fontFamily+',sans-serif;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'
+    +'<span style="font-size:12px;font-weight:700;color:'+q.theme.primary+';text-transform:uppercase;letter-spacing:0.5px;">Question '+(currentSlideIdx+1)+' of '+q.slides.length+'</span>'
+    +'<span id="canvas-points-label" style="font-size:12px;font-weight:700;color:'+q.theme.muted+';background:'+q.theme.bg+';padding:3px 10px;border-radius:20px;">'+s.points+' pts</span>'
+    +'</div>'
+    +'<div style="font-size:20px;font-weight:700;color:'+q.theme.text+';min-height:40px;margin-bottom:24px;line-height:1.4;">'+(esc(s.question)||'<span style="color:'+q.theme.muted+';">Type your question here...</span>')+'</div>';
+
+  if(s.qType==='mc'||s.qType==='ms'){
+    var opts=s.options||[];
+    var correctArr=s.qType==='ms'?(s.correct||[]):[s.correct];
+    for(var i=0;i<opts.length;i++){
+      var isCor=correctArr.indexOf(i)>=0;
+      h+='<div style="padding:14px 18px;border:2px solid '+(isCor?q.theme.primary:q.theme.border)+';border-radius:'+borderR+';margin-bottom:12px;color:'+q.theme.text+';font-size:14px;'
+        +(isCor?'background:'+q.theme.primary+';color:#fff;font-weight:600;':'')
+        +'">'+esc(opts[i])+'</div>';
+    }
+  } else if(s.qType==='tf'){
+    var labels=['True','False'];
+    for(var i=0;i<2;i++){
+      var isCor=s.correct===i;
+      h+='<div style="padding:14px 18px;border:2px solid '+(isCor?q.theme.primary:q.theme.border)+';border-radius:'+borderR+';margin-bottom:12px;color:'+q.theme.text+';font-size:14px;'
+        +(isCor?'background:'+q.theme.primary+';color:#fff;font-weight:600;':'')
+        +'">'+labels[i]+'</div>';
+    }
+  } else if(s.qType==='fitb'){
+    h+='<div style="padding:14px 18px;border:2px dashed '+q.theme.border+';border-radius:'+borderR+';color:'+q.theme.muted+';font-size:14px;">Student types answer here...</div>';
+    if(s.correctAnswer) h+='<div style="margin-top:8px;font-size:12px;color:'+q.theme.primary+';font-weight:600;">Answer: '+esc(s.correctAnswer)+'</div>';
+  } else if(s.qType==='mat'){
+    var pairs=s.pairs||[];
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+    h+='<div style="font-size:11px;font-weight:700;color:'+q.theme.muted+';text-transform:uppercase;padding:0 0 4px;">Terms</div>';
+    h+='<div style="font-size:11px;font-weight:700;color:'+q.theme.muted+';text-transform:uppercase;padding:0 0 4px;">Definitions</div>';
+    for(var i=0;i<pairs.length;i++){
+      h+='<div style="padding:10px 14px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';font-size:13px;color:'+q.theme.text+';">'+esc(pairs[i].left)+'</div>';
+      h+='<div style="padding:10px 14px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';font-size:13px;color:'+q.theme.text+';">'+esc(pairs[i].right)+'</div>';
+    }
+    h+='</div>';
+  } else if(s.qType==='ord'){
+    var items=s.items||[];
+    for(var i=0;i<items.length;i++){
+      h+='<div style="padding:12px 18px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';margin-bottom:8px;font-size:13px;color:'+q.theme.text+';display:flex;align-items:center;gap:10px;">'
+        +'<span style="font-size:12px;font-weight:700;color:'+q.theme.primary+';min-width:20px;">'+(i+1)+'</span>'+esc(items[i])+'</div>';
+    }
+  }
+  h+='</div>';
+  cv.innerHTML=h;
+}
+
+// =================== RIGHT PANEL ===================
+function renderRPanel(){
+  var rp=document.getElementById('editor-rpanel');
+  var q=currentQuiz,s=currentSlide();
+  var h='<div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;gap:4px;">'
+    +'<button class="tab-btn-rp rp-tab-btn'+(rpTab==='content'?' active':'')+'" data-rptab="content">Content</button>'
+    +'<button class="tab-btn-rp rp-tab-btn'+(rpTab==='design'?' active':'')+'" data-rptab="design">Design</button>'
+    +'<button class="tab-btn-rp rp-tab-btn'+(rpTab==='settings'?' active':'')+'" data-rptab="settings">Settings</button>'
+    +'</div><div style="padding:14px;" id="rp-body">';
+
+  if(!s){h+='<p style="color:#94a3b8;font-size:13px;">No slide selected.</p></div>';rp.innerHTML=h;bindRPTabs(rp);return;}
+
+  if(rpTab==='content'){
+    h+=renderContentTab(q,s);
+  } else if(rpTab==='design'){
+    h+=renderDesignTab(q);
+  } else {
+    h+=renderSettingsTab(q);
+  }
+  h+='</div>';
+  rp.innerHTML=h;
+  bindRPTabs(rp);
+  if(rpTab==='content') bindContentTab(q,s);
+  else if(rpTab==='design') bindDesignTab(q);
+  else bindSettingsTab(q);
+}
+
+function bindRPTabs(rp){
+  rp.querySelectorAll('.rp-tab-btn').forEach(function(b){
+    b.addEventListener('click',function(){rpTab=this.getAttribute('data-rptab');renderRPanel();});
+  });
+}
+
+// ===== CONTENT TAB =====
+function renderContentTab(q,s){
+  var h='<div class="rp-label">Question Type</div>'
+    +'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;">';
+  var types=['mc','tf','ms','fitb','mat','ord'];
+  for(var i=0;i<types.length;i++){
+    var t=types[i];
+    h+='<button class="rp-qtype-btn" data-qt="'+t+'" style="padding:4px 8px;border-radius:6px;border:2px solid '+(s.qType===t?TYPE_COLORS[t]:'#e2e8f0')+';background:'+(s.qType===t?TYPE_COLORS[t]:'#fff')+';color:'+(s.qType===t?'#fff':'#334155')+';font-size:11px;font-weight:700;cursor:pointer;transition:all 0.1s;">'+TYPE_SHORT[t]+'</button>';
+  }
+  h+='</div>'
+    +'<div class="rp-label">Points</div>'
+    +'<input type="number" id="rp-points" class="rp-input" value="'+s.points+'" min="0" max="1000" style="margin-bottom:4px;">'
+    +'<div class="rp-label">Question</div>'
+    +'<textarea id="rp-question" class="rp-textarea" rows="3" placeholder="Type your question...">'+esc(s.question)+'</textarea>';
+
+  // Answer editor
+  h+='<div class="rp-label">Answers</div>';
+  if(s.qType==='mc'){
+    var opts=s.options||[];
+    for(var i=0;i<opts.length;i++){
+      h+='<div class="option-row">'
+        +'<input type="radio" name="mc-correct" value="'+i+'"'+(s.correct===i?' checked':'')+'>'
+        +'<input type="text" class="rp-mc-opt" data-oidx="'+i+'" value="'+esc(opts[i])+'">'
+        +'<button class="action-btn-sm rp-del-opt" data-oidx="'+i+'" style="color:#ef4444;" title="Remove">✕</button>'
+        +'</div>';
+    }
+    h+='<button id="rp-add-opt" style="font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;font-weight:600;margin-top:4px;">+ Add Option</button>';
+  } else if(s.qType==='tf'){
+    h+='<div style="display:flex;gap:6px;">'
+      +'<button class="rp-tf-btn" data-val="0" style="flex:1;padding:10px;border-radius:8px;border:2px solid '+(s.correct===0?'#10b981':'#e2e8f0')+';background:'+(s.correct===0?'#10b981':'#fff')+';color:'+(s.correct===0?'#fff':'#0f172a')+';font-weight:700;cursor:pointer;">True</button>'
+      +'<button class="rp-tf-btn" data-val="1" style="flex:1;padding:10px;border-radius:8px;border:2px solid '+(s.correct===1?'#10b981':'#e2e8f0')+';background:'+(s.correct===1?'#10b981':'#fff')+';color:'+(s.correct===1?'#fff':'#0f172a')+';font-weight:700;cursor:pointer;">False</button>'
+      +'</div>';
+  } else if(s.qType==='ms'){
+    var opts=s.options||[];
+    var corr=s.correct||[];
+    for(var i=0;i<opts.length;i++){
+      h+='<div class="option-row">'
+        +'<input type="checkbox" class="rp-ms-chk" data-oidx="'+i+'"'+(corr.indexOf(i)>=0?' checked':'')+'>'
+        +'<input type="text" class="rp-ms-opt" data-oidx="'+i+'" value="'+esc(opts[i])+'">'
+        +'<button class="action-btn-sm rp-del-opt-ms" data-oidx="'+i+'" style="color:#ef4444;" title="Remove">✕</button>'
+        +'</div>';
+    }
+    h+='<button id="rp-add-opt-ms" style="font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;font-weight:600;margin-top:4px;">+ Add Option</button>';
+  } else if(s.qType==='fitb'){
+    h+='<input type="text" id="rp-fitb-ans" class="rp-input" placeholder="Correct answer" value="'+esc(s.correctAnswer||'')+'">';
+  } else if(s.qType==='mat'){
+    var pairs=s.pairs||[];
+    for(var i=0;i<pairs.length;i++){
+      h+='<div class="option-row">'
+        +'<input type="text" class="rp-mat-left" data-pidx="'+i+'" value="'+esc(pairs[i].left)+'" placeholder="Term" style="flex:1;">'
+        +'<span style="color:#94a3b8;font-size:12px;">→</span>'
+        +'<input type="text" class="rp-mat-right" data-pidx="'+i+'" value="'+esc(pairs[i].right)+'" placeholder="Definition" style="flex:1;">'
+        +'<button class="action-btn-sm rp-del-pair" data-pidx="'+i+'" style="color:#ef4444;">✕</button>'
+        +'</div>';
+    }
+    h+='<button id="rp-add-pair" style="font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;font-weight:600;margin-top:4px;">+ Add Pair</button>';
+  } else if(s.qType==='ord'){
+    var items=s.items||[];
+    for(var i=0;i<items.length;i++){
+      h+='<div class="option-row">'
+        +'<button class="action-btn-sm rp-ord-up" data-iidx="'+i+'"'+(i===0?' disabled':'')+'>▲</button>'
+        +'<button class="action-btn-sm rp-ord-dn" data-iidx="'+i+'"'+(i===items.length-1?' disabled':'')+'>▼</button>'
+        +'<input type="text" class="rp-ord-item" data-iidx="'+i+'" value="'+esc(items[i])+'">'
+        +'<button class="action-btn-sm rp-del-ord" data-iidx="'+i+'" style="color:#ef4444;">✕</button>'
+        +'</div>';
+    }
+    h+='<button id="rp-add-ord" style="font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;font-weight:600;margin-top:4px;">+ Add Item</button>';
+  }
+
+  // Feedback
+  h+='<div class="rp-label" style="margin-top:18px;">Feedback</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+    +'<div class="toggle'+(s.feedback.enabled?' on':'')+'" id="rp-fb-toggle"></div>'
+    +'<span style="font-size:12px;color:#64748b;">Show feedback</span></div>';
+  if(s.feedback.enabled){
+    h+='<input type="text" id="rp-fb-correct" class="rp-input" placeholder="Correct feedback" value="'+esc(s.feedback.correct)+'" style="margin-bottom:6px;">'
+      +'<input type="text" id="rp-fb-incorrect" class="rp-input" placeholder="Incorrect feedback" value="'+esc(s.feedback.incorrect)+'">';
+  }
+  return h;
+}
+
+function bindContentTab(q,s){
+  var rp=document.getElementById('editor-rpanel');
+
+  // Question type switch
+  rp.querySelectorAll('.rp-qtype-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var newT=this.getAttribute('data-qt');
+      if(newT===s.qType)return;
+      var ns=mkSlide(newT);
+      ns.question=s.question;
+      ns.points=s.points;
+      ns.feedback={enabled:s.feedback.enabled,correct:s.feedback.correct||'',incorrect:s.feedback.incorrect||''};
+      ns.id=s.id;
+      currentQuiz.slides[currentSlideIdx]=ns;saveQuiz(currentQuiz);renderEditor();
+    });
+  });
+
+  // Points
+  var ptsEl=document.getElementById('rp-points');
+  if(ptsEl) ptsEl.addEventListener('input',function(){
+    var slide=currentSlide();
+    if(!slide)return;
+    slide.points=parseInt(this.value)||0;saveQuiz(currentQuiz);
+    var lbl=document.getElementById('canvas-points-label');
+    if(lbl)lbl.textContent=slide.points+' pts';
+  });
+
+  // Question
+  var qEl=document.getElementById('rp-question');
+  if(qEl) qEl.addEventListener('input',function(){
+    var slide=currentSlide();
+    if(!slide)return;
+    slide.question=this.value;saveQuiz(currentQuiz);renderCanvas();renderSidebar();
+  });
+
+  // MC
+  if(s.qType==='mc'){
+    rp.querySelectorAll('input[name="mc-correct"]').forEach(function(r){
+      r.addEventListener('change',function(){s.correct=parseInt(this.value);saveQuiz(currentQuiz);renderCanvas();});
+    });
+    rp.querySelectorAll('.rp-mc-opt').forEach(function(inp){
+      inp.addEventListener('input',function(){s.options[parseInt(this.getAttribute('data-oidx'))]=this.value;saveQuiz(currentQuiz);renderCanvas();});
+    });
+    rp.querySelectorAll('.rp-del-opt').forEach(function(b){
+      b.addEventListener('click',function(){
+        var idx=parseInt(this.getAttribute('data-oidx'));
+        if(s.options.length<=2){alert('Minimum 2 options.');return;}
+        s.options.splice(idx,1);
+        if(s.correct>=s.options.length)s.correct=s.options.length-1;
+        else if(s.correct>idx)s.correct--;
+        saveQuiz(currentQuiz);renderEditor();
+      });
+    });
+    var addBtn=document.getElementById('rp-add-opt');
+    if(addBtn) addBtn.addEventListener('click',function(){s.options.push('New Option');saveQuiz(currentQuiz);renderEditor();});
+  }
+
+  // TF
+  if(s.qType==='tf'){
+    rp.querySelectorAll('.rp-tf-btn').forEach(function(b){
+      b.addEventListener('click',function(){s.correct=parseInt(this.getAttribute('data-val'));saveQuiz(currentQuiz);renderEditor();});
+    });
+  }
+
+  // MS
+  if(s.qType==='ms'){
+    rp.querySelectorAll('.rp-ms-chk').forEach(function(chk){
+      chk.addEventListener('change',function(){
+        var idx=parseInt(this.getAttribute('data-oidx'));
+        if(!Array.isArray(s.correct))s.correct=[];
+        if(this.checked){if(s.correct.indexOf(idx)<0)s.correct.push(idx);}
+        else{s.correct=s.correct.filter(function(c){return c!==idx;});}
+        saveQuiz(currentQuiz);renderCanvas();
+      });
+    });
+    rp.querySelectorAll('.rp-ms-opt').forEach(function(inp){
+      inp.addEventListener('input',function(){s.options[parseInt(this.getAttribute('data-oidx'))]=this.value;saveQuiz(currentQuiz);renderCanvas();});
+    });
+    rp.querySelectorAll('.rp-del-opt-ms').forEach(function(b){
+      b.addEventListener('click',function(){
+        var idx=parseInt(this.getAttribute('data-oidx'));
+        if(s.options.length<=2){alert('Minimum 2 options.');return;}
+        s.options.splice(idx,1);
+        s.correct=(s.correct||[]).filter(function(c){return c!==idx;}).map(function(c){return c>idx?c-1:c;});
+        saveQuiz(currentQuiz);renderEditor();
+      });
+    });
+    var ab=document.getElementById('rp-add-opt-ms');
+    if(ab) ab.addEventListener('click',function(){s.options.push('New Option');saveQuiz(currentQuiz);renderEditor();});
+  }
+
+  // FITB
+  if(s.qType==='fitb'){
+    var fb=document.getElementById('rp-fitb-ans');
+    if(fb) fb.addEventListener('input',function(){s.correctAnswer=this.value;saveQuiz(currentQuiz);renderCanvas();});
+  }
+
+  // MAT
+  if(s.qType==='mat'){
+    rp.querySelectorAll('.rp-mat-left').forEach(function(inp){
+      inp.addEventListener('input',function(){s.pairs[parseInt(this.getAttribute('data-pidx'))].left=this.value;saveQuiz(currentQuiz);renderCanvas();});
+    });
+    rp.querySelectorAll('.rp-mat-right').forEach(function(inp){
+      inp.addEventListener('input',function(){s.pairs[parseInt(this.getAttribute('data-pidx'))].right=this.value;saveQuiz(currentQuiz);renderCanvas();});
+    });
+    rp.querySelectorAll('.rp-del-pair').forEach(function(b){
+      b.addEventListener('click',function(){
+        var idx=parseInt(this.getAttribute('data-pidx'));
+        if(s.pairs.length<=1){alert('Minimum 1 pair.');return;}
+        s.pairs.splice(idx,1);saveQuiz(currentQuiz);renderEditor();
+      });
+    });
+    var ap=document.getElementById('rp-add-pair');
+    if(ap) ap.addEventListener('click',function(){s.pairs.push({left:'',right:''});saveQuiz(currentQuiz);renderEditor();});
+  }
+
+  // ORD
+  if(s.qType==='ord'){
+    rp.querySelectorAll('.rp-ord-item').forEach(function(inp){
+      inp.addEventListener('input',function(){s.items[parseInt(this.getAttribute('data-iidx'))]=this.value;saveQuiz(currentQuiz);renderCanvas();});
+    });
+    rp.querySelectorAll('.rp-ord-up').forEach(function(b){
+      b.addEventListener('click',function(){
+        var i=parseInt(this.getAttribute('data-iidx'));if(i===0)return;
+        var tmp=s.items[i];s.items[i]=s.items[i-1];s.items[i-1]=tmp;saveQuiz(currentQuiz);renderEditor();
+      });
+    });
+    rp.querySelectorAll('.rp-ord-dn').forEach(function(b){
+      b.addEventListener('click',function(){
+        var i=parseInt(this.getAttribute('data-iidx'));if(i>=s.items.length-1)return;
+        var tmp=s.items[i];s.items[i]=s.items[i+1];s.items[i+1]=tmp;saveQuiz(currentQuiz);renderEditor();
+      });
+    });
+    rp.querySelectorAll('.rp-del-ord').forEach(function(b){
+      b.addEventListener('click',function(){
+        var i=parseInt(this.getAttribute('data-iidx'));if(s.items.length<=2){alert('Minimum 2 items.');return;}s.items.splice(i,1);saveQuiz(currentQuiz);renderEditor();
+      });
+    });
+    var ao=document.getElementById('rp-add-ord');
+    if(ao) ao.addEventListener('click',function(){s.items.push('New Item');saveQuiz(currentQuiz);renderEditor();});
+  }
+
+  // Feedback toggle
+  var fbT=document.getElementById('rp-fb-toggle');
+  if(fbT) fbT.addEventListener('click',function(){s.feedback.enabled=!s.feedback.enabled;saveQuiz(currentQuiz);renderRPanel();});
+  var fbC=document.getElementById('rp-fb-correct');
+  if(fbC) fbC.addEventListener('input',function(){s.feedback.correct=this.value;saveQuiz(currentQuiz);});
+  var fbI=document.getElementById('rp-fb-incorrect');
+  if(fbI) fbI.addEventListener('input',function(){s.feedback.incorrect=this.value;saveQuiz(currentQuiz);});
+}
+
+// ===== DESIGN TAB =====
+function renderDesignTab(q){
+  var h='<div class="rp-label">Theme</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;">';
+  for(var i=0;i<THEMES.length;i++){
+    var t=THEMES[i];
+    h+='<div class="swatch rp-theme-sw'+(q.theme.id===t.id?' active':'')+'" data-tidx="'+i+'" style="background:'+t.primary+';width:100%;height:32px;" title="'+t.name+'"></div>';
+  }
+  h+='</div>'
+    +'<div class="rp-label">Font Family</div>'
+    +'<select id="rp-font" class="rp-input" style="margin-bottom:4px;">';
+  for(var i=0;i<FONTS.length;i++) h+='<option'+(q.fontFamily===FONTS[i]?' selected':'')+'>'+FONTS[i]+'</option>';
+  h+='</select>'
+    +'<div class="rp-label">Background</div>'
+    +'<div style="display:flex;gap:4px;margin-bottom:8px;">'
+    +'<button class="rp-bg-btn tab-btn-rp'+(q.bgType==='solid'?' active':'')+'" data-bg="solid">Solid Theme</button>'
+    +'<button class="rp-bg-btn tab-btn-rp'+(q.bgType==='gradient'?' active':'')+'" data-bg="gradient">Gradient</button>'
+    +'</div>';
+  if(q.bgType==='gradient'){
+    h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;">';
+    for(var i=0;i<BG_GRADIENTS.length;i++){
+      h+='<div class="grad-swatch rp-grad-sw'+(q.bgGradientIdx===i?' active':'')+'" data-gidx="'+i+'" style="background:'+BG_GRADIENTS[i]+';width:100%;height:32px;border-radius:8px;cursor:pointer;border:2px solid '+(q.bgGradientIdx===i?'#2563eb':'transparent')+';"></div>';
+    }
+    h+='</div>';
+  }
+  h+='<div class="rp-label">Button Style</div>'
+    +'<div style="display:flex;gap:4px;">'
+    +'<button class="rp-btnstyle tab-btn-rp'+(q.btnStyle==='rounded'?' active':'')+'" data-bs="rounded">Rounded</button>'
+    +'<button class="rp-btnstyle tab-btn-rp'+(q.btnStyle==='pill'?' active':'')+'" data-bs="pill">Pill</button>'
+    +'<button class="rp-btnstyle tab-btn-rp'+(q.btnStyle==='sharp'?' active':'')+'" data-bs="sharp">Sharp</button>'
+    +'</div>';
+  return h;
+}
+
+function bindDesignTab(q){
+  var rp=document.getElementById('editor-rpanel');
+  rp.querySelectorAll('.rp-theme-sw').forEach(function(sw){
+    sw.addEventListener('click',function(){
+      q.theme=JSON.parse(JSON.stringify(THEMES[parseInt(this.getAttribute('data-tidx'))]));
+      saveQuiz(currentQuiz);renderEditor();
+    });
+  });
+  var fSel=document.getElementById('rp-font');
+  if(fSel) fSel.addEventListener('change',function(){q.fontFamily=this.value;saveQuiz(currentQuiz);renderCanvas();});
+  rp.querySelectorAll('.rp-bg-btn').forEach(function(b){
+    b.addEventListener('click',function(){q.bgType=this.getAttribute('data-bg');saveQuiz(currentQuiz);renderEditor();});
+  });
+  rp.querySelectorAll('.rp-grad-sw').forEach(function(sw){
+    sw.addEventListener('click',function(){q.bgGradientIdx=parseInt(this.getAttribute('data-gidx'));saveQuiz(currentQuiz);renderEditor();});
+  });
+  rp.querySelectorAll('.rp-btnstyle').forEach(function(b){
+    b.addEventListener('click',function(){q.btnStyle=this.getAttribute('data-bs');saveQuiz(currentQuiz);renderEditor();});
+  });
+}
+
+// ===== SETTINGS TAB =====
+function renderSettingsTab(q){
+  var h='<div class="rp-label">Quiz Title</div>'
+    +'<input type="text" id="rp-quiz-title" class="rp-input" value="'+esc(q.title)+'" style="margin-bottom:4px;">'
+    +'<div class="rp-label">Pass Score (%)</div>'
+    +'<input type="number" id="rp-passscore" class="rp-input" value="'+q.passScore+'" min="0" max="100">'
+    +'<div class="rp-label">Shuffle Questions</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+    +'<div class="toggle'+(q.shuffle?' on':'')+'" id="rp-shuffle-toggle"></div>'
+    +'<span style="font-size:12px;color:#64748b;">'+(q.shuffle?'On':'Off')+'</span></div>'
+    +'<div class="rp-label">Show Feedback</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+    +'<div class="toggle'+(q.showFeedback?' on':'')+'" id="rp-feedback-toggle"></div>'
+    +'<span style="font-size:12px;color:#64748b;">'+(q.showFeedback?'On':'Off')+'</span></div>'
+    +'<div class="rp-label">Pass Message</div>'
+    +'<textarea id="rp-passmsg" class="rp-textarea" rows="2">'+esc(q.passingMessage)+'</textarea>'
+    +'<div class="rp-label">Fail Message</div>'
+    +'<textarea id="rp-failmsg" class="rp-textarea" rows="2">'+esc(q.failingMessage)+'</textarea>'
+    +'<div class="rp-label" style="margin-top:20px;">Export</div>'
+    +'<button id="rp-save-qz2" class="btn-primary" style="width:100%;margin-bottom:8px;padding:10px;font-size:13px;">💾 Save .qz2</button>'
+    +'<button id="rp-export-html" class="btn-primary" style="width:100%;margin-bottom:8px;padding:10px;font-size:13px;background:#16a34a;">🌐 Export HTML</button>'
+    +'<button id="rp-export-scorm" class="btn-primary" style="width:100%;margin-bottom:8px;padding:10px;font-size:13px;background:#7c3aed;">📦 Export SCORM 1.2</button>'
+    +'<button id="rp-preview" class="btn-primary" style="width:100%;padding:14px;font-size:14px;margin-top:12px;background:#0f172a;">▶ Preview Quiz</button>';
+  return h;
+}
+
+function bindSettingsTab(q){
+  var titleEl=document.getElementById('rp-quiz-title');
+  if(titleEl) titleEl.addEventListener('input',function(){
+    q.title=this.value.trim()||'Untitled Quiz';
+    saveQuiz(currentQuiz);renderSidebar();
+  });
+  document.getElementById('rp-passscore').addEventListener('input',function(){q.passScore=parseInt(this.value)||70;saveQuiz(currentQuiz);});
+  document.getElementById('rp-shuffle-toggle').addEventListener('click',function(){q.shuffle=!q.shuffle;saveQuiz(currentQuiz);renderRPanel();});
+  document.getElementById('rp-feedback-toggle').addEventListener('click',function(){q.showFeedback=!q.showFeedback;saveQuiz(currentQuiz);renderRPanel();});
+  document.getElementById('rp-passmsg').addEventListener('input',function(){q.passingMessage=this.value;saveQuiz(currentQuiz);});
+  document.getElementById('rp-failmsg').addEventListener('input',function(){q.failingMessage=this.value;saveQuiz(currentQuiz);});
+  document.getElementById('rp-save-qz2').addEventListener('click',exportQZ2);
+  document.getElementById('rp-export-html').addEventListener('click',exportHTML);
+  document.getElementById('rp-export-scorm').addEventListener('click',exportSCORM);
+  document.getElementById('rp-preview').addEventListener('click',function(){showScreen('preview');});
+}
+
+// =================== IMPORT / EXPORT ===================
+function exportQZ2(){
+  var json=JSON.stringify(currentQuiz,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(currentQuiz.title||'quiz').replace(/[^a-z0-9]/gi,'_')+'.qz2';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+
+function importQZ2(){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='.qz2,.json';
+  inp.addEventListener('change',function(e){
+    var f=e.target.files[0];if(!f)return;
+    var r=new FileReader();
+    r.addEventListener('load',function(ev){
+      try{
+        var q=JSON.parse(ev.target.result);
+        q.theme=q.theme||THEMES[0];
+        q.created=q.created||today();
+        if(!q.id) q.id=uid();
+        if(!q.fontFamily) q.fontFamily='Arial';
+        if(!q.bgType) q.bgType='solid';
+        if(q.bgGradientIdx===undefined) q.bgGradientIdx=0;
+        if(!q.btnStyle) q.btnStyle='rounded';
+        if(!q.slides) q.slides=[];
+        if(q.passScore===undefined) q.passScore=70;
+        if(q.shuffle===undefined) q.shuffle=false;
+        if(q.showFeedback===undefined) q.showFeedback=true;
+        if(!q.passingMessage) q.passingMessage='Congratulations! You passed!';
+        if(!q.failingMessage) q.failingMessage='Keep practicing!';
+        // Validate slides
+        for(var i=0;i<q.slides.length;i++){
+          var sl=q.slides[i];
+          if(!sl.id) sl.id=uid();
+          if(!sl.feedback) sl.feedback={enabled:false,correct:'',incorrect:''};
+          if(sl.points===undefined) sl.points=10;
+        }
+        quizzes.push(q);saveQuiz(q);
+        currentQuiz=q;currentSlideIdx=0;rpTab='content';
+        showScreen('editor');
+      }catch(err){alert('Invalid file: '+err.message);}
+    });
+    r.readAsText(f);
+  });
+  inp.click();
+}
+
+// =================== QUIZ PLAYER BUILDER ===================
+function buildPlayerHTML(quiz,scormMode){
+  var qj=safeJsonForScript(quiz);
+  var sc='';
+  if(scormMode){
+    sc='var API=null;try{API=window.API||parent.API||top.API;}catch(e){}'
+      +'function lmsInit(){if(API)try{API.LMSInitialize("");}catch(e){}}'
+      +'function lmsFinish(score,passed){if(!API)return;try{API.LMSSetValue("cmi.core.score.raw",String(Math.round(score)));'
+      +'API.LMSSetValue("cmi.core.score.min","0");API.LMSSetValue("cmi.core.score.max","100");'
+      +'API.LMSSetValue("cmi.core.lesson_status",passed?"passed":"failed");'
+      +'API.LMSCommit("");API.LMSFinish("");}catch(e){}}';
+  }
+  var showExitBtn=!scormMode;
+  var fontFamily=quiz.fontFamily||'Arial';
+  var html='<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">'
+    +'<title>'+esc(quiz.title)+'</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'+fontFamily+',Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;}'
+    +'.opt-btn{display:block;width:100%;text-align:left;padding:14px 18px;border:2px solid var(--border);border-radius:var(--br);margin-bottom:12px;background:var(--card);color:var(--text);font-size:15px;cursor:pointer;transition:all 0.15s;font-family:inherit;}'
+    +'.opt-btn:hover{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 8%,var(--card));}'
+    +'.opt-btn.selected{background:var(--primary);color:#fff;border-color:var(--primary);}'
+    +'.opt-btn.correct-show{background:#16a34a;color:#fff;border-color:#16a34a;}'
+    +'.opt-btn.incorrect-show{background:#ef4444;color:#fff;border-color:#ef4444;}'
+    +'.submit-btn{margin-top:24px;padding:12px 24px;background:var(--primary);color:#fff;border:none;border-radius:var(--br);font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;}'
+    +'.submit-btn:hover{opacity:0.9;}.submit-btn:disabled{opacity:0.5;cursor:default;}'
+    +'.feedback-card{margin-top:16px;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:600;}'
+    +'.fb-correct{background:#dcfce7;color:#166534;}.fb-incorrect{background:#fee2e2;color:#991b1b;}'
+    +'<\/style><\/head><body>'
+    +'<script>'
+    +'var QUIZ='+qj+';'
+    +sc
+    +'var showExitBtn='+showExitBtn+';'
+    +'var slides=QUIZ.slides.slice();'
+    +'if(QUIZ.shuffle){for(var i=slides.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=slides[i];slides[i]=slides[j];slides[j]=t;}}'
+    +'var ci=0,score=0,totalPts=0,answered=false;'
+    +'for(var i=0;i<slides.length;i++)totalPts+=slides[i].points;'
+    +'var br=QUIZ.btnStyle==="pill"?"999px":QUIZ.btnStyle==="sharp"?"2px":"8px";'
+    +'var bgStyle=QUIZ.bgType==="gradient"?'
+    +'"background:"+["linear-gradient(135deg,#667eea,#764ba2)","linear-gradient(135deg,#f093fb,#f5576c)","linear-gradient(135deg,#4facfe,#00f2fe)","linear-gradient(135deg,#43e97b,#38f9d7)","linear-gradient(135deg,#fa709a,#fee140)","linear-gradient(135deg,#a18cd1,#fbc2eb)","linear-gradient(135deg,#fd7043,#ffb74d)","linear-gradient(135deg,#00c6ff,#0072ff)","linear-gradient(135deg,#11998e,#38ef7d)","linear-gradient(135deg,#ee0979,#ff6a00)","linear-gradient(135deg,#373b44,#4286f4)","linear-gradient(135deg,#f7971e,#ffd200)"][QUIZ.bgGradientIdx||0]+";"'
+    +':"background:"+QUIZ.theme.bg+";";'
+    +'document.documentElement.style.cssText="--primary:"+QUIZ.theme.primary+";--text:"+QUIZ.theme.text+";--card:"+QUIZ.theme.card+";--bg:"+QUIZ.theme.bg+";--muted:"+QUIZ.theme.muted+";--border:"+QUIZ.theme.border+";--br:"+br+";";'
+    +(scormMode?'lmsInit();':'')
+    +'function esc(s){return String(s||"").replace(/&/g,"\\&amp;").replace(/</g,"\\&lt;").replace(/>/g,"\\&gt;");}'
+    +'function exitQuiz(){try{window.close();}catch(e){}}'
+    +'var userAnswer=null;'
+    +'function render(){'
+    +'if(ci>=slides.length){showResults();return;}'
+    +'answered=false;var s=slides[ci];'
+    +'var pct=Math.round((ci/slides.length)*100);'
+    +'var h="<div style=\\"position:fixed;top:0;left:0;width:100%;z-index:10;\\">"'
+    +'+"<div style=\\"background:"+QUIZ.theme.primary+";color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;\\">"'
+    +'+"<strong>"+esc(QUIZ.title)+"<\\/strong>"'
+    +'+(showExitBtn?"<button id=\\"exit-btn\\" style=\\"background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;\\">\\u2715 Exit<\\/button>":"")+'
+    +'"<\\/div>"'
+    +'+"<div style=\\"height:4px;background:"+QUIZ.theme.border+";\\"><div style=\\"height:100%;width:"+pct+"%;background:"+QUIZ.theme.primary+";transition:width 0.3s;\\"><\\/div><\\/div><\\/div>";'
+    +'h+="<div style=\\"flex:1;display:flex;justify-content:center;padding:80px 20px 40px;"+bgStyle+"\\">"'
+    +'+"<div style=\\"max-width:580px;width:100%;background:"+QUIZ.theme.card+";border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.08);\\">"'
+    +'+"<div style=\\"display:flex;justify-content:space-between;margin-bottom:16px;\\">"'
+    +'+"<span style=\\"font-size:12px;font-weight:700;color:"+QUIZ.theme.muted+";\\">Question "+(ci+1)+" of "+slides.length+"<\\/span>"'
+    +'+"<span style=\\"font-size:12px;font-weight:700;color:"+QUIZ.theme.muted+";background:"+QUIZ.theme.bg+";padding:3px 10px;border-radius:20px;\\">"+s.points+" pts<\\/span>"'
+    +'+"<\\/div>"'
+    +'+"<div style=\\"font-size:20px;font-weight:700;color:"+QUIZ.theme.text+";margin-bottom:24px;line-height:1.4;\\">"+esc(s.question)+"<\\/div>"'
+    +'+"<div id=\\"ans-area\\"><\\/div>"'
+    +'+"<button id=\\"submit-btn\\" class=\\"submit-btn\\" disabled>Submit Answer<\\/button>"'
+    +'+"<div id=\\"fb-area\\"><\\/div>"'
+    +'+"<\\/div><\\/div>";'
+    +'document.body.innerHTML=h;'
+    +'renderAnswers(s);bindSubmit(s);'
+    +'}'
+    +'function renderAnswers(s){'
+    +'var area=document.getElementById("ans-area");var h="";userAnswer=null;'
+    +'if(s.qType==="mc"){var opts=s.options||[];for(var i=0;i<opts.length;i++){h+="<button class=\\"opt-btn\\" data-idx=\\""+i+"\\">"+esc(opts[i])+"<\\/button>";}area.innerHTML=h;'
+    +'area.querySelectorAll(".opt-btn").forEach(function(b){b.addEventListener("click",function(){userAnswer=parseInt(this.getAttribute("data-idx"));area.querySelectorAll(".opt-btn").forEach(function(x){x.classList.remove("selected");});this.classList.add("selected");document.getElementById("submit-btn").disabled=false;});});}'
+    +'else if(s.qType==="tf"){h+="<button class=\\"opt-btn\\" data-idx=\\"0\\">True<\\/button><button class=\\"opt-btn\\" data-idx=\\"1\\">False<\\/button>";area.innerHTML=h;'
+    +'area.querySelectorAll(".opt-btn").forEach(function(b){b.addEventListener("click",function(){userAnswer=parseInt(this.getAttribute("data-idx"));area.querySelectorAll(".opt-btn").forEach(function(x){x.classList.remove("selected");});this.classList.add("selected");document.getElementById("submit-btn").disabled=false;});});}'
+    +'else if(s.qType==="ms"){var opts=s.options||[];userAnswer=[];for(var i=0;i<opts.length;i++){h+="<button class=\\"opt-btn\\" data-idx=\\""+i+"\\">"+esc(opts[i])+"<\\/button>";}area.innerHTML=h;'
+    +'area.querySelectorAll(".opt-btn").forEach(function(b){b.addEventListener("click",function(){var idx=parseInt(this.getAttribute("data-idx"));var ai=userAnswer.indexOf(idx);if(ai>=0){userAnswer.splice(ai,1);this.classList.remove("selected");}else{userAnswer.push(idx);this.classList.add("selected");}document.getElementById("submit-btn").disabled=userAnswer.length===0;});});}'
+    +'else if(s.qType==="fitb"){h+="<input type=\\"text\\" id=\\"fitb-input\\" style=\\"width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:var(--br);font-size:15px;font-family:inherit;\\" placeholder=\\"Type your answer...\\">";area.innerHTML=h;'
+    +'document.getElementById("fitb-input").addEventListener("input",function(){userAnswer=this.value.trim();document.getElementById("submit-btn").disabled=!userAnswer;});}'
+    +'else if(s.qType==="mat"){var pairs=s.pairs||[];var rights=pairs.map(function(p){return p.right;});for(var i=rights.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=rights[i];rights[i]=rights[j];rights[j]=t;}'
+    +'userAnswer={};h+="<div style=\\"margin-bottom:12px;\\">";for(var i=0;i<pairs.length;i++){h+="<div style=\\"display:flex;align-items:center;gap:8px;margin-bottom:10px;\\"><span style=\\"flex:1;padding:10px;background:var(--bg);border-radius:var(--br);font-size:13px;\\">"+esc(pairs[i].left)+"<\\/span><span style=\\"color:var(--muted);\\">\\u2192<\\/span><select class=\\"mat-sel\\" data-midx=\\""+i+"\\" style=\\"flex:1;padding:10px;border:2px solid var(--border);border-radius:var(--br);font-size:13px;font-family:inherit;\\"><option value=\\"\\">Select...<\\/option>";for(var j=0;j<rights.length;j++){h+="<option value=\\""+esc(rights[j])+"\\">"+esc(rights[j])+"<\\/option>";}h+="<\\/select><\\/div>";}h+="<\\/div>";'
+    +'area.innerHTML=h;area.querySelectorAll(".mat-sel").forEach(function(sel){sel.addEventListener("change",function(){userAnswer[this.getAttribute("data-midx")]=this.value;var allDone=true;for(var k=0;k<pairs.length;k++){if(!userAnswer[String(k)])allDone=false;}document.getElementById("submit-btn").disabled=!allDone;});});}'
+    +'else if(s.qType==="ord"){var items=(s.items||[]).slice();for(var i=items.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=items[i];items[i]=items[j];items[j]=t;}'
+    +'userAnswer=items.slice();h+="<div id=\\"ord-list\\"><\\/div>";area.innerHTML=h;document.getElementById("submit-btn").disabled=false;'
+    +'function reRenderOrd(){var ol=document.getElementById("ord-list");var h2="";for(var i=0;i<userAnswer.length;i++){h2+="<div class=\\"opt-btn ord-item\\" data-oidx=\\""+i+"\\" style=\\"display:flex;align-items:center;gap:10px;\\"><span style=\\"color:var(--primary);font-weight:700;min-width:20px;\\">"+(i+1)+"<\\/span><span class=\\"ord-text\\">"+esc(userAnswer[i])+"<\\/span><span style=\\"margin-left:auto;display:flex;gap:4px;\\"><button class=\\"ord-up-p\\" data-oi=\\""+i+"\\" style=\\"border:1px solid var(--border);background:var(--card);border-radius:4px;cursor:pointer;padding:2px 6px;font-size:12px;\\"'+">\\u25B2<\\/button><button class=\\"ord-dn-p\\" data-oi=\\""+i+"\\" style=\\"border:1px solid var(--border);background:var(--card);border-radius:4px;cursor:pointer;padding:2px 6px;font-size:12px;\\"'+">\\u25BC<\\/button><\\/span><\\/div>";}ol.innerHTML=h2;bindOrdBtns();}'
+    +'function bindOrdBtns(){document.querySelectorAll(".ord-up-p").forEach(function(b){b.addEventListener("click",function(){var i=parseInt(this.getAttribute("data-oi"));if(i===0)return;var t=userAnswer[i];userAnswer[i]=userAnswer[i-1];userAnswer[i-1]=t;reRenderOrd();});});document.querySelectorAll(".ord-dn-p").forEach(function(b){b.addEventListener("click",function(){var i=parseInt(this.getAttribute("data-oi"));if(i>=userAnswer.length-1)return;var t=userAnswer[i];userAnswer[i]=userAnswer[i+1];userAnswer[i+1]=t;reRenderOrd();});});}reRenderOrd();}'
+    +'}'
+    +'function bindSubmit(s){'
+    +'document.getElementById("submit-btn").addEventListener("click",function(){'
+    +'if(answered)return;answered=true;'
+    +'var correct=false;'
+    +'if(s.qType==="mc")correct=userAnswer===s.correct;'
+    +'else if(s.qType==="tf")correct=userAnswer===s.correct;'
+    +'else if(s.qType==="ms"){var sc=s.correct||[];correct=userAnswer.length===sc.length&&sc.every(function(c){return userAnswer.indexOf(c)>=0;});}'
+    +'else if(s.qType==="fitb")correct=userAnswer.toLowerCase()===((s.correctAnswer||"").toLowerCase());'
+    +'else if(s.qType==="mat"){correct=true;var pairs=s.pairs||[];for(var i=0;i<pairs.length;i++){if(userAnswer[String(i)]!==pairs[i].right)correct=false;}}'
+    +'else if(s.qType==="ord"){correct=true;var items=s.items||[];for(var i=0;i<items.length;i++){if(userAnswer[i]!==items[i])correct=false;}}'
+    +'if(correct)score+=s.points;'
+    +'var fb=document.getElementById("fb-area");'
+    +'if(QUIZ.showFeedback){'
+    +'var msg=correct?"\\u2705 Correct!":"\\u274C Incorrect.";'
+    +'if(s.feedback&&s.feedback.enabled)msg+=correct?(s.feedback.correct?" "+s.feedback.correct:""):(s.feedback.incorrect?" "+s.feedback.incorrect:"");'
+    +'fb.innerHTML="<div class=\\"feedback-card "+(correct?"fb-correct":"fb-incorrect")+"\\">"+msg+"<\\/div><button id=\\"next-btn\\" class=\\"submit-btn\\" style=\\"margin-top:12px;\\">Next \\u2192<\\/button>";'
+    +'document.getElementById("next-btn").addEventListener("click",function(){ci++;render();});'
+    +'this.style.display="none";'
+    +'}else{ci++;render();}'
+    +'});'
+    +'var ex=document.getElementById("exit-btn");if(ex)ex.addEventListener("click",function(){exitQuiz();});'
+    +'}'
+    +'function showResults(){'
+    +'var pct=totalPts>0?Math.round((score/totalPts)*100):0;'
+    +'var passed=pct>=QUIZ.passScore;'
+    +(scormMode?'lmsFinish(pct,passed);':'')
+    +'document.body.innerHTML="<div style=\\"min-height:100vh;display:flex;align-items:center;justify-content:center;"+bgStyle+"\\"><div style=\\"max-width:480px;width:100%;background:"+QUIZ.theme.card+";border-radius:20px;padding:40px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.1);\\"><div style=\\"font-size:56px;font-weight:800;color:"+QUIZ.theme.primary+";\\">"+pct+"%<\\/div><div style=\\"display:inline-block;padding:4px 16px;border-radius:999px;font-size:13px;font-weight:700;margin:12px 0 16px;color:#fff;background:"+(passed?"#16a34a":"#ef4444")+";\\">"+( passed?"PASSED":"NOT PASSED")+"<\\/div><p style=\\"color:"+QUIZ.theme.text+";font-size:16px;margin-bottom:8px;\\">"+esc(passed?QUIZ.passingMessage:QUIZ.failingMessage)+"<\\/p><p style=\\"color:"+QUIZ.theme.muted+";font-size:13px;margin-bottom:24px;\\">Score: "+score+" / "+totalPts+"<\\/p>'
+    +'<button id=\\"retake-btn\\" style=\\"padding:12px 24px;background:"+QUIZ.theme.primary+";color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;margin-right:8px;font-family:inherit;\\">\\u21A9 Retake<\\/button>"'
+    +'+(showExitBtn?"<button id=\\"exit-btn2\\" style=\\"padding:12px 24px;background:transparent;border:2px solid "+QUIZ.theme.primary+";color:"+QUIZ.theme.primary+";border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;\\">\\u2715 Exit<\\/button>":"")+'
+    +'+"<\\/div><\\/div>";'
+    +'document.getElementById("retake-btn").addEventListener("click",function(){ci=0;score=0;if(QUIZ.shuffle){for(var i=slides.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=slides[i];slides[i]=slides[j];slides[j]=t;}}render();});'
+    +'var ex2=document.getElementById("exit-btn2");if(ex2)ex2.addEventListener("click",function(){exitQuiz();});'
+    +'}'
+    +'render();'
+    +'<\/script><\/body><\/html>';
+  return html;
+}
+
+function exportHTML(){
+  var html=buildPlayerHTML(currentQuiz,false);
+  var blob=new Blob([html],{type:'text/html'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(currentQuiz.title||'quiz').replace(/[^a-z0-9]/gi,'_')+'_quiz.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},3000);
+}
+
+// =================== SCORM ===================
+function buildZip(files){
+  function strToBytes(str){
+    var encoder=new TextEncoder();
+    return encoder.encode(str);
+  }
+  function uint16LE(n){return[n&0xff,(n>>8)&0xff];}
+  function uint32LE(n){return[n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff];}
+  function crc32(data){var table=[];for(var i=0;i<256;i++){var c=i;for(var j=0;j<8;j++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);table[i]=c;}var crc=0xFFFFFFFF;for(var i=0;i<data.length;i++)crc=table[(crc^data[i])&0xff]^(crc>>>8);return(crc^0xFFFFFFFF)>>>0;}
+  var localHeaders=[],centralDirs=[],offset=0;
+  for(var fi=0;fi<files.length;fi++){
+    var file=files[fi],nameBytes=strToBytes(file.name),dataBytes=strToBytes(file.data),crc=crc32(dataBytes),size=dataBytes.length;
+    var lh=[0x50,0x4b,0x03,0x04].concat(uint16LE(20)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint32LE(crc)).concat(uint32LE(size)).concat(uint32LE(size)).concat(uint16LE(nameBytes.length)).concat(uint16LE(0));
+    var localEntry=lh.concat(Array.from(nameBytes)).concat(Array.from(dataBytes));
+    localHeaders.push(localEntry);
+    var cd=[0x50,0x4b,0x01,0x02].concat(uint16LE(20)).concat(uint16LE(20)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint32LE(crc)).concat(uint32LE(size)).concat(uint32LE(size)).concat(uint16LE(nameBytes.length)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint16LE(0)).concat(uint32LE(0)).concat(uint32LE(offset));
+    centralDirs.push(cd.concat(Array.from(nameBytes)));
+    offset+=localEntry.length;
+  }
+  var centralDirBytes=[],centralDirSize=0;
+  for(var i=0;i<centralDirs.length;i++){centralDirBytes=centralDirBytes.concat(centralDirs[i]);centralDirSize+=centralDirs[i].length;}
+  var eocd=[0x50,0x4b,0x05,0x06].concat(uint16LE(0)).concat(uint16LE(0)).concat(uint16LE(files.length)).concat(uint16LE(files.length)).concat(uint32LE(centralDirSize)).concat(uint32LE(offset)).concat(uint16LE(0));
+  var allBytes=[];
+  for(var i=0;i<localHeaders.length;i++)allBytes=allBytes.concat(localHeaders[i]);
+  allBytes=allBytes.concat(centralDirBytes).concat(eocd);
+  return new Uint8Array(allBytes);
+}
+
+function buildSCORMManifest(quiz){
+  return '<?xml version="1.0" encoding="UTF-8"?>\n'
+    +'<manifest identifier="QUIZMAKER2_MANIFEST" version="1"\n'
+    +'  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"\n'
+    +'  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"\n'
+    +'  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
+    +'  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd">\n'
+    +'  <metadata><schema>ADL SCORM</schema><schemaversion>1.2</schemaversion></metadata>\n'
+    +'  <organizations default="ORG1">\n'
+    +'    <organization identifier="ORG1">\n'
+    +'      <title>'+esc(quiz.title)+'</title>\n'
+    +'      <item identifier="ITEM1" identifierref="RES1">\n'
+    +'        <title>'+esc(quiz.title)+'</title>\n'
+    +'        <adlcp:masteryscore>'+quiz.passScore+'</adlcp:masteryscore>\n'
+    +'      </item>\n'
+    +'    </organization>\n'
+    +'  </organizations>\n'
+    +'  <resources>\n'
+    +'    <resource identifier="RES1" type="webcontent" adlcp:scormtype="sco" href="index.html">\n'
+    +'      <file href="index.html"/>\n'
+    +'    </resource>\n'
+    +'  </resources>\n'
+    +'</manifest>';
+}
+
+function exportSCORM(){
+  var manifest=buildSCORMManifest(currentQuiz);
+  var player=buildPlayerHTML(currentQuiz,true);
+  var zipBytes=buildZip([
+    {name:'imsmanifest.xml',data:manifest},
+    {name:'index.html',data:player}
+  ]);
+  var blob=new Blob([zipBytes],{type:'application/zip'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(currentQuiz.title||'quiz').replace(/[^a-z0-9]/gi,'_')+'_scorm12.zip';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},3000);
+}
+
+// =================== PREVIEW ===================
+function renderPreview(){
+  var pv=document.getElementById('screen-preview');
+  var q=currentQuiz;
+  var slides=q.slides.slice();
+  if(q.shuffle){for(var i=slides.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=slides[i];slides[i]=slides[j];slides[j]=t;}}
+  var pvState={ci:0,score:0,totalPts:0,answered:false,slides:slides,userAnswer:null};
+  for(var i=0;i<slides.length;i++) pvState.totalPts+=slides[i].points;
+  var borderR=q.btnStyle==='pill'?'999px':q.btnStyle==='sharp'?'2px':'8px';
+  var fontFamily=q.fontFamily||'Arial';
+
+  function pvRender(){
+    if(pvState.ci>=pvState.slides.length){pvShowResults();return;}
+    pvState.answered=false;pvState.userAnswer=null;
+    var s=pvState.slides[pvState.ci];
+    var pct=Math.round((pvState.ci/pvState.slides.length)*100);
+    var bgStyle=q.bgType==='gradient'?'background:'+BG_GRADIENTS[q.bgGradientIdx||0]+';':'background:'+q.theme.bg+';';
+    var h='<div style="background:'+q.theme.primary+';color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">'
+      +'<strong style="font-size:14px;">'+esc(q.title)+'</strong>'
+      +'<button id="pv-exit" style="background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;">✕ Exit Preview</button>'
+      +'</div>'
+      +'<div style="height:4px;background:'+q.theme.border+';"><div style="height:100%;width:'+pct+'%;background:'+q.theme.primary+';transition:width 0.3s;"></div></div>'
+      +'<div style="flex:1;display:flex;justify-content:center;align-items:flex-start;padding:40px 20px;overflow-y:auto;'+bgStyle+'">'
+      +'<div style="max-width:580px;width:100%;background:'+q.theme.card+';border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.08);font-family:'+fontFamily+',sans-serif;">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:16px;">'
+      +'<span style="font-size:12px;font-weight:700;color:'+q.theme.muted+';">Question '+(pvState.ci+1)+' of '+pvState.slides.length+'</span>'
+      +'<span style="font-size:12px;font-weight:700;color:'+q.theme.muted+';background:'+q.theme.bg+';padding:3px 10px;border-radius:20px;">'+s.points+' pts</span>'
+      +'</div>'
+      +'<div style="font-size:20px;font-weight:700;color:'+q.theme.text+';margin-bottom:24px;line-height:1.4;">'+esc(s.question||'(No question text)')+'</div>'
+      +'<div id="pv-ans"></div>'
+      +'<button id="pv-submit" class="btn-primary" style="width:100%;margin-top:24px;padding:14px;border-radius:'+borderR+';" disabled>Submit Answer</button>'
+      +'<div id="pv-fb"></div>'
+      +'</div></div>';
+    pv.innerHTML=h;
+    document.getElementById('pv-exit').addEventListener('click',function(){showScreen('editor');});
+    pvRenderAnswers(s);
+    pvBindSubmit(s);
+  }
+
+  function pvRenderAnswers(s){
+    var area=document.getElementById('pv-ans');
+    var h='';
+    if(s.qType==='mc'){
+      var opts=s.options||[];
+      for(var i=0;i<opts.length;i++) h+='<button class="pv-opt" data-idx="'+i+'" style="display:block;width:100%;text-align:left;padding:14px 18px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';margin-bottom:12px;background:'+q.theme.card+';color:'+q.theme.text+';font-size:15px;cursor:pointer;transition:all 0.15s;font-family:'+fontFamily+',sans-serif;">'+esc(opts[i])+'</button>';
+      area.innerHTML=h;
+      area.querySelectorAll('.pv-opt').forEach(function(b){
+        b.addEventListener('click',function(){
+          pvState.userAnswer=parseInt(this.getAttribute('data-idx'));
+          area.querySelectorAll('.pv-opt').forEach(function(x){x.style.background=q.theme.card;x.style.color=q.theme.text;x.style.borderColor=q.theme.border;});
+          this.style.background=q.theme.primary;this.style.color='#fff';this.style.borderColor=q.theme.primary;
+          document.getElementById('pv-submit').disabled=false;
+        });
+      });
+    } else if(s.qType==='tf'){
+      ['True','False'].forEach(function(lbl,i){
+        h+='<button class="pv-opt" data-idx="'+i+'" style="display:block;width:100%;text-align:left;padding:14px 18px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';margin-bottom:12px;background:'+q.theme.card+';color:'+q.theme.text+';font-size:15px;cursor:pointer;font-family:'+fontFamily+',sans-serif;">'+lbl+'</button>';
+      });
+      area.innerHTML=h;
+      area.querySelectorAll('.pv-opt').forEach(function(b){
+        b.addEventListener('click',function(){
+          pvState.userAnswer=parseInt(this.getAttribute('data-idx'));
+          area.querySelectorAll('.pv-opt').forEach(function(x){x.style.background=q.theme.card;x.style.color=q.theme.text;x.style.borderColor=q.theme.border;});
+          this.style.background=q.theme.primary;this.style.color='#fff';this.style.borderColor=q.theme.primary;
+          document.getElementById('pv-submit').disabled=false;
+        });
+      });
+    } else if(s.qType==='ms'){
+      pvState.userAnswer=[];
+      var opts=s.options||[];
+      for(var i=0;i<opts.length;i++) h+='<button class="pv-opt" data-idx="'+i+'" style="display:block;width:100%;text-align:left;padding:14px 18px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';margin-bottom:12px;background:'+q.theme.card+';color:'+q.theme.text+';font-size:15px;cursor:pointer;font-family:'+fontFamily+',sans-serif;">'+esc(opts[i])+'</button>';
+      area.innerHTML=h;
+      area.querySelectorAll('.pv-opt').forEach(function(b){
+        b.addEventListener('click',function(){
+          var idx=parseInt(this.getAttribute('data-idx'));
+          var ai=pvState.userAnswer.indexOf(idx);
+          if(ai>=0){pvState.userAnswer.splice(ai,1);this.style.background=q.theme.card;this.style.color=q.theme.text;this.style.borderColor=q.theme.border;}
+          else{pvState.userAnswer.push(idx);this.style.background=q.theme.primary;this.style.color='#fff';this.style.borderColor=q.theme.primary;}
+          document.getElementById('pv-submit').disabled=pvState.userAnswer.length===0;
+        });
+      });
+    } else if(s.qType==='fitb'){
+      h+='<input type="text" id="pv-fitb" style="width:100%;padding:14px 18px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';font-size:15px;font-family:'+fontFamily+',sans-serif;color:'+q.theme.text+';background:'+q.theme.card+';" placeholder="Type your answer...">';
+      area.innerHTML=h;
+      document.getElementById('pv-fitb').addEventListener('input',function(){
+        pvState.userAnswer=this.value.trim();
+        document.getElementById('pv-submit').disabled=!pvState.userAnswer;
+      });
+    } else if(s.qType==='mat'){
+      pvState.userAnswer={};
+      var pairs=s.pairs||[];
+      var rights=pairs.map(function(p){return p.right;});
+      for(var i=rights.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=rights[i];rights[i]=rights[j];rights[j]=t;}
+      for(var i=0;i<pairs.length;i++){
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
+          +'<span style="flex:1;padding:10px;background:'+q.theme.bg+';border-radius:'+borderR+';font-size:13px;color:'+q.theme.text+';">'+esc(pairs[i].left)+'</span>'
+          +'<span style="color:'+q.theme.muted+';">→</span>'
+          +'<select class="pv-mat-sel" data-midx="'+i+'" style="flex:1;padding:10px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';font-size:13px;font-family:inherit;"><option value="">Select...</option>';
+        for(var j=0;j<rights.length;j++) h+='<option value="'+esc(rights[j])+'">'+esc(rights[j])+'</option>';
+        h+='</select></div>';
+      }
+      area.innerHTML=h;
+      area.querySelectorAll('.pv-mat-sel').forEach(function(sel){
+        sel.addEventListener('change',function(){
+          pvState.userAnswer[this.getAttribute('data-midx')]=this.value;
+          var allDone=true;
+          for(var k=0;k<pairs.length;k++){if(!pvState.userAnswer[String(k)])allDone=false;}
+          document.getElementById('pv-submit').disabled=!allDone;
+        });
+      });
+    } else if(s.qType==='ord'){
+      var items=(s.items||[]).slice();
+      for(var i=items.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=items[i];items[i]=items[j];items[j]=t;}
+      pvState.userAnswer=items.slice();
+      document.getElementById('pv-submit').disabled=false;
+      function renderOrdList(){
+        var ol=document.getElementById('pv-ans');
+        var h2='';
+        for(var i=0;i<pvState.userAnswer.length;i++){
+          h2+='<div style="display:flex;align-items:center;gap:10px;padding:12px 18px;border:2px solid '+q.theme.border+';border-radius:'+borderR+';margin-bottom:8px;color:'+q.theme.text+';font-size:13px;background:'+q.theme.card+';">'
+            +'<span style="color:'+q.theme.primary+';font-weight:700;min-width:20px;">'+(i+1)+'</span>'
+            +'<span style="flex:1;">'+esc(pvState.userAnswer[i])+'</span>'
+            +'<button class="pv-ord-up" data-oi="'+i+'" style="border:1px solid '+q.theme.border+';background:'+q.theme.card+';border-radius:4px;cursor:pointer;padding:2px 6px;font-size:12px;"'+(i===0?' disabled':'')+'>▲</button>'
+            +'<button class="pv-ord-dn" data-oi="'+i+'" style="border:1px solid '+q.theme.border+';background:'+q.theme.card+';border-radius:4px;cursor:pointer;padding:2px 6px;font-size:12px;"'+(i>=pvState.userAnswer.length-1?' disabled':'')+'>▼</button>'
+            +'</div>';
+        }
+        ol.innerHTML=h2;
+        ol.querySelectorAll('.pv-ord-up').forEach(function(b){
+          b.addEventListener('click',function(){
+            var i=parseInt(this.getAttribute('data-oi'));if(i===0)return;
+            var t=pvState.userAnswer[i];pvState.userAnswer[i]=pvState.userAnswer[i-1];pvState.userAnswer[i-1]=t;renderOrdList();
+          });
+        });
+        ol.querySelectorAll('.pv-ord-dn').forEach(function(b){
+          b.addEventListener('click',function(){
+            var i=parseInt(this.getAttribute('data-oi'));if(i>=pvState.userAnswer.length-1)return;
+            var t=pvState.userAnswer[i];pvState.userAnswer[i]=pvState.userAnswer[i+1];pvState.userAnswer[i+1]=t;renderOrdList();
+          });
+        });
+      }
+      renderOrdList();
+    }
+  }
+
+  function pvBindSubmit(s){
+    document.getElementById('pv-submit').addEventListener('click',function(){
+      if(pvState.answered)return;pvState.answered=true;
+      var correct=false;
+      if(s.qType==='mc') correct=pvState.userAnswer===s.correct;
+      else if(s.qType==='tf') correct=pvState.userAnswer===s.correct;
+      else if(s.qType==='ms'){var sc=s.correct||[];correct=Array.isArray(pvState.userAnswer)&&pvState.userAnswer.length===sc.length&&sc.every(function(c){return pvState.userAnswer.indexOf(c)>=0;});}
+      else if(s.qType==='fitb') correct=(pvState.userAnswer||'').toLowerCase()===(s.correctAnswer||'').toLowerCase();
+      else if(s.qType==='mat'){correct=true;var pairs=s.pairs||[];for(var i=0;i<pairs.length;i++){if(pvState.userAnswer[String(i)]!==pairs[i].right)correct=false;}}
+      else if(s.qType==='ord'){correct=true;var items=s.items||[];for(var i=0;i<items.length;i++){if(!pvState.userAnswer||pvState.userAnswer[i]!==items[i])correct=false;}}
+      if(correct) pvState.score+=s.points;
+
+      if(q.showFeedback){
+        var msg=correct?'✅ Correct!':'❌ Incorrect.';
+        if(s.feedback&&s.feedback.enabled) msg+=correct?(s.feedback.correct?' '+s.feedback.correct:''):(s.feedback.incorrect?' '+s.feedback.incorrect:'');
+        var fb=document.getElementById('pv-fb');
+        fb.innerHTML='<div style="margin-top:16px;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:600;'
+          +(correct?'background:#dcfce7;color:#166534;':'background:#fee2e2;color:#991b1b;')+'">'+msg+'</div>'
+          +'<button id="pv-next" class="btn-primary" style="width:100%;margin-top:12px;padding:14px;border-radius:'+borderR+';">Next →</button>';
+        document.getElementById('pv-submit').style.display='none';
+        document.getElementById('pv-next').addEventListener('click',function(){pvState.ci++;pvRender();});
+      } else {
+        pvState.ci++;pvRender();
+      }
+    });
+  }
+
+  function pvShowResults(){
+    var pctVal=pvState.totalPts>0?Math.round((pvState.score/pvState.totalPts)*100):0;
+    var passed=pctVal>=q.passScore;
+    var bgStyle=q.bgType==='gradient'?'background:'+BG_GRADIENTS[q.bgGradientIdx||0]+';':'background:'+q.theme.bg+';';
+    pv.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;'+bgStyle+'">'
+      +'<div style="max-width:480px;width:90%;background:'+q.theme.card+';border-radius:20px;padding:40px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.1);font-family:'+fontFamily+',sans-serif;">'
+      +'<div style="font-size:56px;font-weight:800;color:'+q.theme.primary+';">'+pctVal+'%</div>'
+      +'<div style="display:inline-block;padding:4px 16px;border-radius:999px;font-size:13px;font-weight:700;margin:12px 0 16px;color:#fff;background:'+(passed?'#16a34a':'#ef4444')+';">'+(passed?'PASSED':'NOT PASSED')+'</div>'
+      +'<p style="color:'+q.theme.text+';font-size:16px;margin-bottom:8px;">'+esc(passed?q.passingMessage:q.failingMessage)+'</p>'
+      +'<p style="color:'+q.theme.muted+';font-size:13px;margin-bottom:24px;">Score: '+pvState.score+' / '+pvState.totalPts+'</p>'
+      +'<button id="pv-retake" style="padding:12px 24px;background:'+q.theme.primary+';color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;margin-right:8px;">↩ Retake</button>'
+      +'<button id="pv-exit-r" style="padding:12px 24px;background:transparent;border:2px solid '+q.theme.primary+';color:'+q.theme.primary+';border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;">✕ Exit</button>'
+      +'</div></div>';
+    document.getElementById('pv-retake').addEventListener('click',function(){
+      pvState.ci=0;pvState.score=0;pvState.answered=false;
+      if(q.shuffle){for(var i=pvState.slides.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pvState.slides[i];pvState.slides[i]=pvState.slides[j];pvState.slides[j]=t;}}
+      pvRender();
+    });
+    document.getElementById('pv-exit-r').addEventListener('click',function(){showScreen('editor');});
+  }
+
+  pvRender();
+}
+
+// =================== INIT ===================
+function init(){
+  loadAllQuizzes();
+  renderHome();
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
