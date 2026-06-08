@@ -1435,6 +1435,36 @@ function exportWebHTML(quiz) {
 
   document.addEventListener("DOMContentLoaded", init);
 </script></body></html>";
+  downloadBlob(h, (quiz.title || "quiz").replace(/[^a-z0-9]/gi, "_") + ".html", "text/html");
+}
+
+  function wireStaticButtons() {
+    function on(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener("click", fn); }
+    on("btn-new-quiz",    createNewQuiz);
+    on("btn-import-qz2",  importQZ2);
+    on("btn-back-home",   function() { saveCurrentEditorState(); saveToStorage(); showScreen("screen-home"); renderHome(); });
+    on("btn-preview",     function() { saveCurrentEditorState(); saveToStorage(); openPlayer(currentQuiz.id, "screen-editor"); });
+    on("btn-save-quiz",   function() { saveCurrentEditorState(); saveToStorage(); showToast("Saved!"); var t = document.getElementById("ed-quiz-title"); if (t) t.textContent = currentQuiz.title; });
+    on("btn-add-mc",  function() { addSlide("mc"); });
+    on("btn-add-ms",  function() { addSlide("ms"); });
+    on("btn-add-tf",  function() { addSlide("tf"); });
+    on("btn-add-sa",  function() { addSlide("sa"); });
+    on("btn-add-mat", function() { addSlide("mat"); });
+    on("btn-add-ord", function() { addSlide("ord"); });
+    on("btn-slide-up",  function() { moveSlide(-1); });
+    on("btn-slide-dn",  function() { moveSlide(1); });
+    on("btn-slide-del", deleteCurrentSlide);
+    on("btn-exit-player", function() { showScreen(playerReturnScreen); if (playerReturnScreen === "screen-home") renderHome(); });
+  }
+
+  function init() {
+    loadFromStorage();
+    renderHome();
+    wireStaticButtons();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+</script></body></html>";
   downloadBlob(h, quiz.title + ".html", "text/html");
   showToast("Web HTML exported!");
 }
