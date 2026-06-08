@@ -1404,202 +1404,70 @@ function exportWebHTML(quiz) {
   h += "if(quiz.showReview&&quiz.feedbackMode!==\"none\"){h2+=\"<div style='margin-top:30px;'><h3 style='font-size:16px;font-weight:700;margin-bottom:14px;'>Review</h3>\";for(var i=0;i<t;i++){var s3=quiz.slides[i];var ic=graded[s3.id]===\"correct\";h2+=\"<div class='review-item'><div class='review-q'>\"+(ic?\"<span style='color:#22c55e;'>&#10003;</span>\":\"<span style='color:#ef4444;'>&#10007;</span>\")+\" Q\"+(i+1)+\": \"+esc(s3.question)+\"</div><div class='review-d'>\";if(s3.qType===\"mc\")h2+=\"Correct: \"+esc(s3.options[s3.correct]||\"\");else if(s3.qType===\"tf\")h2+=\"Correct: \"+(s3.correct===\"true\"?\"True\":\"False\");else if(s3.qType===\"sa\")h2+=\"Accepted: \"+esc(s3.acceptedAnswers.join(\", \"));h2+=\"</div></div>\";}h2+=\"</div>\";}";
   h += "app.innerHTML=h2;document.getElementById(\"retake\").addEventListener(\"click\",function(){si=0;ans={};graded={};ordO={};mcO={};render();});}";
   h += "if(quiz.shuffle)quiz.slides=shuffle(quiz.slides.slice());render();";
-  h += "</script></body></html>";
+  h += "<" + "/script></body></html>";
   downloadBlob(h, (quiz.title||"quiz").replace(/[^a-z0-9]/gi,"_")+".html","text/html");
 }
 
-  function exportSCORM(quiz) {
-    var manifest = '<?xml version="1.0"?><manifest identifier="qm2_'+quiz.id+'" version="1.2" xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"><metadata><schema>ADL SCORM</schema><schemaversion>1.2</schemaversion></metadata><organizations default="o1"><organization identifier="o1"><title>'+quiz.title+'</title><item identifier="i1" identifierref="r1"><title>'+quiz.title+'</title></item></organization></organizations><resources><resource identifier="r1" type="webcontent" adlcp:scormtype="sco" href="index.html"><file href="index.html"/></resource></resources></manifest>';
-    downloadBlob(manifest, "imsmanifest.xml", "application/xml");
-    setTimeout(function() { exportWebHTML(quiz); }, 500);
-    alert("SCORM export: rename the downloaded HTML to index.html and package both files into a ZIP for your LMS.");
-  }
-
-  function saveQuizFile(quiz) {
-    downloadBlob(JSON.stringify(quiz, null, 2), (quiz.title||"quiz").replace(/[^a-z0-9]/gi,"_")+".qz2", "application/json");
-  }
-
-  function importQZ2() {
-    var inp = document.createElement("input");
-    inp.type = "file"; inp.accept = ".qz2,.json";
-    inp.addEventListener("change", function() {
-      var file = inp.files[0]; if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          var q = JSON.parse(e.target.result);
-          if (!q.id || !q.title) { showToast("Invalid quiz file", false); return; }
-          if (!q.slides) q.slides = [];
-          quizzes.push(q);
-          saveToStorage(); renderHome(); showToast("Imported: " + q.title);
-        } catch(err) { showToast("Could not read file", false); }
-      };
-      reader.readAsText(file);
-    });
-    inp.click();
-  }
-
-  // ── WIRE STATIC BUTTONS ──────────────────────────────────────────────────
-  function wireButtons() {
-    function on(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener("click", fn); }
-
-    on("btn-new",     createNewQuiz);
-    on("btn-import",  importQZ2);
-
-    on("btn-back", function() {
-      saveCurrentSlide(); saveToStorage();
-      showScreen("screen-home"); renderHome();
-    });
-    on("btn-preview", function() {
-      saveCurrentSlide(); saveToStorage();
-      openPlayer(currentQuiz.id, "screen-editor");
-    });
-    on("btn-save", function() {
-      saveCurrentSlide(); saveToStorage(); showToast("Saved!");
-      var el = document.getElementById("ed-title-lbl");
-      if (el) el.textContent = currentQuiz.title;
-    });
-
-    on("btn-add-mc",  function() { addSlide("mc"); });
-    on("btn-add-ms",  function() { addSlide("ms"); });
-    on("btn-add-tf",  function() { addSlide("tf"); });
-    on("btn-add-sa",  function() { addSlide("sa"); });
-    on("btn-add-mat", function() { addSlide("mat"); });
-    on("btn-add-ord", function() { addSlide("ord"); });
-
-    on("btn-up",  function() { moveSlide(-1); });
-    on("btn-dn",  function() { moveSlide(1); });
-    on("btn-del", deleteCurrentSlide);
-
-    on("btn-exit", function() {
-      showScreen(playerReturnScreen);
-      if (playerReturnScreen === "screen-home") renderHome();
-    });
-  }
-
-  function init() {
-    loadFromStorage();
-    renderHome();
-    wireButtons();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script></body></html>";
-  downloadBlob(h, (quiz.title || "quiz").replace(/[^a-z0-9]/gi, "_") + ".html", "text/html");
-}
-
-  function wireStaticButtons() {
-    function on(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener("click", fn); }
-    on("btn-new-quiz",    createNewQuiz);
-    on("btn-import-qz2",  importQZ2);
-    on("btn-back-home",   function() { saveCurrentEditorState(); saveToStorage(); showScreen("screen-home"); renderHome(); });
-    on("btn-preview",     function() { saveCurrentEditorState(); saveToStorage(); openPlayer(currentQuiz.id, "screen-editor"); });
-    on("btn-save-quiz",   function() { saveCurrentEditorState(); saveToStorage(); showToast("Saved!"); var t = document.getElementById("ed-quiz-title"); if (t) t.textContent = currentQuiz.title; });
-    on("btn-add-mc",  function() { addSlide("mc"); });
-    on("btn-add-ms",  function() { addSlide("ms"); });
-    on("btn-add-tf",  function() { addSlide("tf"); });
-    on("btn-add-sa",  function() { addSlide("sa"); });
-    on("btn-add-mat", function() { addSlide("mat"); });
-    on("btn-add-ord", function() { addSlide("ord"); });
-    on("btn-slide-up",  function() { moveSlide(-1); });
-    on("btn-slide-dn",  function() { moveSlide(1); });
-    on("btn-slide-del", deleteCurrentSlide);
-    on("btn-exit-player", function() { showScreen(playerReturnScreen); if (playerReturnScreen === "screen-home") renderHome(); });
-  }
-
-  function init() {
-    loadFromStorage();
-    renderHome();
-    wireStaticButtons();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script></body></html>";
-  downloadBlob(h, (quiz.title || "quiz").replace(/[^a-z0-9]/gi, "_") + ".html", "text/html");
-}
-
-  function wireStaticButtons() {
-    function on(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener("click", fn); }
-    on("btn-new-quiz",    createNewQuiz);
-    on("btn-import-qz2",  importQZ2);
-    on("btn-back-home",   function() { saveCurrentEditorState(); saveToStorage(); showScreen("screen-home"); renderHome(); });
-    on("btn-preview",     function() { saveCurrentEditorState(); saveToStorage(); openPlayer(currentQuiz.id, "screen-editor"); });
-    on("btn-save-quiz",   function() { saveCurrentEditorState(); saveToStorage(); showToast("Saved!"); var t = document.getElementById("ed-quiz-title"); if (t) t.textContent = currentQuiz.title; });
-    on("btn-add-mc",  function() { addSlide("mc"); });
-    on("btn-add-ms",  function() { addSlide("ms"); });
-    on("btn-add-tf",  function() { addSlide("tf"); });
-    on("btn-add-sa",  function() { addSlide("sa"); });
-    on("btn-add-mat", function() { addSlide("mat"); });
-    on("btn-add-ord", function() { addSlide("ord"); });
-    on("btn-slide-up",  function() { moveSlide(-1); });
-    on("btn-slide-dn",  function() { moveSlide(1); });
-    on("btn-slide-del", deleteCurrentSlide);
-    on("btn-exit-player", function() { showScreen(playerReturnScreen); if (playerReturnScreen === "screen-home") renderHome(); });
-  }
-
-  function init() {
-    loadFromStorage();
-    renderHome();
-    wireStaticButtons();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script></body></html>";
-  downloadBlob(h, quiz.title + ".html", "text/html");
-  showToast("Web HTML exported!");
-}
-
 function exportSCORM(quiz) {
-  var manifest = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<manifest identifier=\"" + esc(quiz.id) + "\" version=\"1.0\" xmlns=\"http://www.imsproject.org/xsd/imscp_rootv1p1p2\" xmlns:adlcp=\"http://www.adlnet.org/xsd/adlcp_rootv1p2\">\n  <organizations default=\"org1\">\n    <organization identifier=\"org1\">\n      <title>" + esc(quiz.title) + "</title>\n      <item identifier=\"item1\" identifierref=\"res1\"><title>" + esc(quiz.title) + "</title></item>\n    </organization>\n  </organizations>\n  <resources>\n    <resource identifier=\"res1\" type=\"webcontent\" adlcp:scormtype=\"sco\" href=\"index.html\">\n      <file href=\"index.html\"/>\n    </resource>\n  </resources>\n</manifest>";
-  downloadBlob(manifest, "imsmanifest.xml", "application/xml");
-  setTimeout(function() {
-    exportWebHTML(quiz);
-  }, 500);
-  alert("SCORM Export: Two files will download.\n1) imsmanifest.xml\n2) " + quiz.title + ".html (rename to index.html)\n\nPlace both in a folder and zip it for your LMS.");
+  var t = quiz.title || "Quiz";
+  var m = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  m += "<manifest identifier=\"quiz_scorm\" version=\"1.2\">\n";
+  m += "<organizations default=\"o\"><organization identifier=\"o\">";
+  m += "<title>" + t + "</title>";
+  m += "<item identifier=\"i1\" identifierref=\"r1\"><title>" + t + "</title></item>";
+  m += "</organization></organizations>\n";
+  m += "<resources><resource identifier=\"r1\" type=\"webcontent\" href=\"index.html\">";
+  m += "<file href=\"index.html\"/></resource></resources>\n";
+  m += "</manifest>";
+  downloadBlob(m, "imsmanifest.xml", "application/xml");
+  setTimeout(function() { exportWebHTML(quiz); }, 500);
+  alert("SCORM export: rename the downloaded HTML to index.html and zip it with imsmanifest.xml for your LMS.");
 }
 
-/* ═══════════ INIT ═══════════ */
-
-function init() {
-  loadFromStorage();
-  renderHome();
-
-  document.getElementById("btn-new-quiz").addEventListener("click", createNewQuiz);
-  document.getElementById("btn-import-qz2").addEventListener("click", importQZ2);
-
-  document.getElementById("btn-back-home").addEventListener("click", function() {
+function wireButtons() {
+  function on(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", fn);
+  }
+  on("btn-new-quiz", createNewQuiz);
+  on("btn-import-qz2", importQZ2);
+  on("btn-back-home", function() {
     saveCurrentEditorState();
     saveToStorage();
     showScreen("screen-home");
     renderHome();
   });
-  document.getElementById("btn-preview").addEventListener("click", function() {
+  on("btn-preview", function() {
     saveCurrentEditorState();
     saveToStorage();
-    openPlayer(currentQuiz.id, "screen-editor");
+    if (currentQuiz) openPlayer(currentQuiz.id, "screen-editor");
   });
-  document.getElementById("btn-save-quiz").addEventListener("click", function() {
+  on("btn-save-quiz", function() {
     saveCurrentEditorState();
     saveToStorage();
     showToast("Saved!");
-    document.getElementById("ed-quiz-title").textContent = currentQuiz.title;
+    var el = document.getElementById("ed-quiz-title");
+    if (el) el.textContent = currentQuiz.title;
   });
-
-  document.getElementById("btn-add-mc").addEventListener("click", function() { addSlide("mc"); });
-  document.getElementById("btn-add-ms").addEventListener("click", function() { addSlide("ms"); });
-  document.getElementById("btn-add-tf").addEventListener("click", function() { addSlide("tf"); });
-  document.getElementById("btn-add-sa").addEventListener("click", function() { addSlide("sa"); });
-  document.getElementById("btn-add-mat").addEventListener("click", function() { addSlide("mat"); });
-  document.getElementById("btn-add-ord").addEventListener("click", function() { addSlide("ord"); });
-
-  document.getElementById("btn-slide-up").addEventListener("click", function() { moveSlide(-1); });
-  document.getElementById("btn-slide-dn").addEventListener("click", function() { moveSlide(1); });
-  document.getElementById("btn-slide-del").addEventListener("click", deleteCurrentSlide);
-
-  document.getElementById("btn-exit-player").addEventListener("click", function() {
+  on("btn-add-mc",  function() { addSlide("mc");  });
+  on("btn-add-ms",  function() { addSlide("ms");  });
+  on("btn-add-tf",  function() { addSlide("tf");  });
+  on("btn-add-sa",  function() { addSlide("sa");  });
+  on("btn-add-mat", function() { addSlide("mat"); });
+  on("btn-add-ord", function() { addSlide("ord"); });
+  on("btn-slide-up",  function() { moveSlide(-1); });
+  on("btn-slide-dn",  function() { moveSlide(1);  });
+  on("btn-slide-del", deleteCurrentSlide);
+  on("btn-exit-player", function() {
     showScreen(playerReturnScreen);
     if (playerReturnScreen === "screen-home") renderHome();
   });
+}
+
+function init() {
+  loadFromStorage();
+  renderHome();
+  wireButtons();
 }
 
 document.addEventListener("DOMContentLoaded", init);
